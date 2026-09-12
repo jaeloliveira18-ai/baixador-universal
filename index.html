@@ -122,16 +122,16 @@
             statusDiv.innerHTML = "Buscando nos servidores globais...";
             statusDiv.style.color = "#00FF00";
 
-            // Lista de servidores espelhos que não bloqueiam o GitHub
+            // LISTA ATUALIZADA: Sem o "/api/json" no final (Novo padrão V7)
             const servidores = [
-                "https://co.wuk.sh/api/json",
-                "https://cobalt.qwyku.com/api/json",
-                "https://api.cobalt.tools/api/json"
+                "https://co.wuk.sh/",
+                "https://cobalt.qwyku.com/",
+                "https://api.cobalt.tools/",
+                "https://corsproxy.io/?" + encodeURIComponent("https://co.wuk.sh/")
             ];
 
             let sucesso = false;
 
-            // O aplicativo vai tentar cada servidor da lista até um funcionar
             for (let apiUrl of servidores) {
                 if (sucesso) break;
                 
@@ -144,8 +144,8 @@
                         },
                         body: JSON.stringify({
                             url: link,
-                            isAudioOnly: format === 'audio', // Padrão de API v6
-                            downloadMode: format === 'audio' ? 'audio' : 'auto' // Padrão de API v7
+                            isAudioOnly: format === 'audio', // Padrão V6
+                            downloadMode: format === 'audio' ? 'audio' : 'auto' // Padrão V7
                         })
                     });
 
@@ -162,14 +162,13 @@
                         sucesso = true;
                     }
                 } catch (error) {
-                    // Se o servidor atual falhar, ele pula pro próximo silenciosamente
-                    console.log("Servidor falhou, tentando o próximo...");
+                    // Tenta o próximo servidor silenciosamente
+                    console.log("Falha no servidor:", apiUrl);
                 }
             }
 
-            // Se a lista inteira falhar (muito raro)
             if (!sucesso) {
-                statusDiv.innerHTML = "❌ Erro: Link privado/inválido ou servidores ocupados.";
+                statusDiv.innerHTML = "❌ Erro: Todos os servidores estão ocupados. Tente de novo!";
                 statusDiv.style.color = "#FF3333";
             }
 
