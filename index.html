@@ -119,46 +119,62 @@
 
             btn.disabled = true;
             btn.innerText = "Processando...";
-            statusDiv.innerHTML = "Conectando aos servidores globais...";
+            statusDiv.innerHTML = "Buscando nos servidores globais...";
             statusDiv.style.color = "#00FF00";
 
-            const apiUrl = "https://corsproxy.io/?https://api.cobalt.tools/";
-            
-            const requestData = { url: link };
-            if (format === 'audio') {
-                requestData.downloadMode = 'audio';
-            }
-            
-            try {
-                const response = await fetch(apiUrl, {
-                    method: "POST",
-                    headers: {
-                        "Accept": "application/json",
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(requestData)
-                });
+            // Lista de servidores espelhos que não bloqueiam o GitHub
+            const servidores = [
+                "https://co.wuk.sh/api/json",
+                "https://cobalt.qwyku.com/api/json",
+                "https://api.cobalt.tools/api/json"
+            ];
 
-                const data = await response.json();
+            let sucesso = false;
 
-                if (data.url) {
-                    statusDiv.innerHTML = "✅ Download liberado! O arquivo está sendo salvo.";
-                    window.location.href = data.url;
-                    
-                    setTimeout(() => {
-                        document.getElementById('linkInput').value = '';
-                    }, 2000);
-                } else {
-                    statusDiv.innerHTML = "❌ Erro no servidor: Link não suportado ou privado.";
-                    statusDiv.style.color = "#FF3333";
+            // O aplicativo vai tentar cada servidor da lista até um funcionar
+            for (let apiUrl of servidores) {
+                if (sucesso) break;
+                
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: "POST",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            url: link,
+                            isAudioOnly: format === 'audio', // Padrão de API v6
+                            downloadMode: format === 'audio' ? 'audio' : 'auto' // Padrão de API v7
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.url) {
+                        statusDiv.innerHTML = "✅ Download liberado! Salvando arquivo...";
+                        window.location.href = data.url;
+                        
+                        setTimeout(() => {
+                            document.getElementById('linkInput').value = '';
+                        }, 2000);
+                        
+                        sucesso = true;
+                    }
+                } catch (error) {
+                    // Se o servidor atual falhar, ele pula pro próximo silenciosamente
+                    console.log("Servidor falhou, tentando o próximo...");
                 }
-            } catch (error) {
-                statusDiv.innerHTML = "❌ O servidor recusou o download. Tente novamente.";
-                statusDiv.style.color = "#FF3333";
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Baixar Agora";
             }
+
+            // Se a lista inteira falhar (muito raro)
+            if (!sucesso) {
+                statusDiv.innerHTML = "❌ Erro: Link privado/inválido ou servidores ocupados.";
+                statusDiv.style.color = "#FF3333";
+            }
+
+            btn.disabled = false;
+            btn.innerText = "Baixar Agora";
         }
     </script>
 </body>
