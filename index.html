@@ -1,110 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baixador Universal</title>
-    <style>
-        body {
-            background-color: #121212;
-            color: #00FF00;
-            font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-            text-align: center;
-        }
-        .container {
-            background-color: #1e1e1e;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 255, 0, 0.15);
-            width: 100%;
-            max-width: 400px;
-        }
-        h2 { 
-            margin-top: 0; 
-            letter-spacing: 1px;
-        }
-        p {
-            font-size: 12px;
-            color: #aaaaaa;
-            margin-bottom: 20px;
-        }
-        input[type="url"], select {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            background: #0d0d0d;
-            border: 1px solid #00FF00;
-            color: #ffffff;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-family: inherit;
-        }
-        input[type="url"]:focus, select:focus {
-            outline: none;
-            box-shadow: 0 0 8px #00FF00;
-        }
-        button {
-            width: 100%;
-            padding: 14px;
-            background-color: #00FF00;
-            color: #000000;
-            border: none;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            text-transform: uppercase;
-            transition: 0.2s;
-            font-family: inherit;
-        }
-        button:active { 
-            background-color: #00cc00; 
-            transform: scale(0.98);
-        }
-        #status { 
-            margin-top: 15px; 
-            font-size: 14px; 
-            word-wrap: break-word; 
-            min-height: 20px;
-        }
-        .assinatura {
-            margin-top: 25px;
-            color: #FF3333;
-            font-weight: bold;
-            font-size: 15px;
-            text-shadow: 0 0 5px rgba(255, 51, 51, 0.4);
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <h2>BAIXADOR UNIVERSAL</h2>
-        <p>Suporta YouTube, Instagram, TikTok, Kwai, X</p>
-        
-        <input type="url" id="linkInput" placeholder="Cole o link do vídeo aqui..." required autocomplete="off">
-        
-        <select id="formatSelect">
-            <option value="video">Baixar Vídeo (MP4)</option>
-            <option value="audio">Baixar Apenas Áudio (MP3)</option>
-        </select>
-        
-        <button onclick="baixarMidia()" id="btnBaixar">Baixar Agora</button>
-        
-        <div id="status"></div>
-        
-        <div class="assinatura">Criado por OCruel</div>
-    </div>
-
-    <script>
+<script>
         async function baixarMidia() {
             const link = document.getElementById('linkInput').value.trim();
             const format = document.getElementById('formatSelect').value;
@@ -119,10 +13,18 @@
 
             btn.disabled = true;
             btn.innerText = "Processando...";
-            statusDiv.innerHTML = "Buscando o arquivo na melhor qualidade...";
+            statusDiv.innerHTML = "Conectando aos servidores globais...";
             statusDiv.style.color = "#00FF00";
 
-            const apiUrl = "https://api.cobalt.tools/api/json";
+            // Usando um Proxy para burlar o bloqueio de segurança do GitHub Pages
+            // E utilizando a nova rota oficial (V7) do Cobalt
+            const apiUrl = "https://corsproxy.io/?https://api.cobalt.tools/";
+            
+            // Configura os dados do pedido no novo padrão
+            const requestData = { url: link };
+            if (format === 'audio') {
+                requestData.downloadMode = 'audio'; // Novo comando para extrair apenas áudio
+            }
             
             try {
                 const response = await fetch(apiUrl, {
@@ -131,27 +33,24 @@
                         "Accept": "application/json",
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({
-                        url: link,
-                        isAudioOnly: format === 'audio'
-                    })
+                    body: JSON.stringify(requestData)
                 });
 
                 const data = await response.json();
 
                 if (data.url) {
                     statusDiv.innerHTML = "✅ Download liberado! O arquivo está sendo salvo.";
-                    window.location.href = data.url;
+                    window.location.href = data.url; // Inicia o download
                     
                     setTimeout(() => {
                         document.getElementById('linkInput').value = '';
                     }, 2000);
                 } else {
-                    statusDiv.innerHTML = "❌ Ocorreu um erro no servidor ou link não suportado.";
+                    statusDiv.innerHTML = "❌ Erro no servidor: Link não suportado ou privado.";
                     statusDiv.style.color = "#FF3333";
                 }
             } catch (error) {
-                statusDiv.innerHTML = "❌ Erro de conexão com a API.";
+                statusDiv.innerHTML = "❌ O servidor recusou o download. Tente novamente.";
                 statusDiv.style.color = "#FF3333";
             } finally {
                 btn.disabled = false;
@@ -159,5 +58,3 @@
             }
         }
     </script>
-</body>
-</html>
