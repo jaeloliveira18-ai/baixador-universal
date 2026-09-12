@@ -122,12 +122,12 @@
             statusDiv.innerHTML = "Buscando nos servidores globais...";
             statusDiv.style.color = "#00FF00";
 
-            // LISTA ATUALIZADA: Sem o "/api/json" no final (Novo padrão V7)
+            // Lista corrigida com os endpoints exatos (V6 e proxy)
             const servidores = [
-                "https://co.wuk.sh/",
-                "https://cobalt.qwyku.com/",
-                "https://api.cobalt.tools/",
-                "https://corsproxy.io/?" + encodeURIComponent("https://co.wuk.sh/")
+                "https://co.wuk.sh/api/json",
+                "https://cobalt.qwyku.com/api/json",
+                "https://imput.net/api/json",
+                "https://corsproxy.io/?" + encodeURIComponent("https://co.wuk.sh/api/json")
             ];
 
             let sucesso = false;
@@ -142,12 +142,18 @@
                             "Accept": "application/json",
                             "Content-Type": "application/json"
                         },
+                        // Parâmetros mesclados para garantir que funcione tanto na V6 quanto na V7
                         body: JSON.stringify({
                             url: link,
-                            isAudioOnly: format === 'audio', // Padrão V6
-                            downloadMode: format === 'audio' ? 'audio' : 'auto' // Padrão V7
+                            isAudioOnly: format === 'audio', 
+                            aFormat: "mp3", 
+                            downloadMode: format === 'audio' ? 'audio' : 'auto', 
+                            audioFormat: "mp3" 
                         })
                     });
+
+                    // Trava de segurança: se o servidor responder com erro (ex: 404), ele pula pro próximo
+                    if (!response.ok) continue;
 
                     const data = await response.json();
 
@@ -162,13 +168,12 @@
                         sucesso = true;
                     }
                 } catch (error) {
-                    // Tenta o próximo servidor silenciosamente
-                    console.log("Falha no servidor:", apiUrl);
+                    // Pula silenciosamente para o próximo servidor em caso de falha na conexão/CORS
                 }
             }
 
             if (!sucesso) {
-                statusDiv.innerHTML = "❌ Erro: Todos os servidores estão ocupados. Tente de novo!";
+                statusDiv.innerHTML = "❌ Erro: Todos os servidores falharam. Verifique o link e tente de novo.";
                 statusDiv.style.color = "#FF3333";
             }
 
