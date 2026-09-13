@@ -1,0 +1,19 @@
+   {
+     "name": "Baixador Universal",
+     "short_name": "Baixador",
+     "description": "Baixe vídeos e áudios das redes sociais e reposte onde quiser. Desenvolvido por OCruel.",
+     "start_url": "/baixador-universal/",
+     "scope": "/baixador-universal/",
+     "display": "standalone",
+     "background_color": "#070b09",
+     "theme_color": "#070b09",
+     "icons": [
+       { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+     ],
+     "share_target": {
+       "action": "/baixador-universal/",
+       "method": "GET",
+       "enctype": "application/x-www-form-urlencoded",
+       "params": { "title": "title", "text": "text", "url": "url" }
+     }
+   }
