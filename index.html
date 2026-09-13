@@ -69,6 +69,10 @@
             background-color: #00cc00; 
             transform: scale(0.98);
         }
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
         #status { 
             margin-top: 15px; 
             font-size: 14px; 
@@ -122,12 +126,11 @@
             statusDiv.innerHTML = "Buscando nos servidores globais...";
             statusDiv.style.color = "#00FF00";
 
-            // Lista corrigida com os endpoints exatos (V6 e proxy)
+            // Endpoints atualizados e proxies CORS conhecidos
             const servidores = [
-                "https://co.wuk.sh/api/json",
-                "https://cobalt.qwyku.com/api/json",
-                "https://imput.net/api/json",
-                "https://corsproxy.io/?" + encodeURIComponent("https://co.wuk.sh/api/json")
+                "https://api.cobalt.tools/",       // API Oficial (V10)
+                "https://cobalt-api.kwiatek.xyz/", // Instância pública comunitária
+                "https://cobalt.api horizn.cloud/" // Backup
             ];
 
             let sucesso = false;
@@ -136,30 +139,46 @@
                 if (sucesso) break;
                 
                 try {
+                    // Requisição padrão da API v10+ do Cobalt
                     const response = await fetch(apiUrl, {
                         method: "POST",
                         headers: {
                             "Accept": "application/json",
                             "Content-Type": "application/json"
                         },
-                        // Parâmetros mesclados para garantir que funcione tanto na V6 quanto na V7
                         body: JSON.stringify({
                             url: link,
-                            isAudioOnly: format === 'audio', 
-                            aFormat: "mp3", 
-                            downloadMode: format === 'audio' ? 'audio' : 'auto', 
-                            audioFormat: "mp3" 
+                            downloadMode: format === 'audio' ? 'audio' : 'auto',
+                            audioFormat: "mp3",
+                            filenameStyle: "basic",
+                            youtubeVideoCodec: "h264"
                         })
                     });
 
-                    // Trava de segurança: se o servidor responder com erro (ex: 404), ele pula pro próximo
-                    if (!response.ok) continue;
-
                     const data = await response.json();
+                    console.log(`Resposta de ${apiUrl}:`, data);
+
+                    // Erro de API (ex: link inválido, servidor sem API key)
+                    if (data.status === "error" || !data.url) {
+                        console.warn(`Erro na API ${apiUrl}:`, data);
+                        continue; 
+                    }
 
                     if (data.url) {
-                        statusDiv.innerHTML = "✅ Download liberado! Salvando arquivo...";
-                        window.location.href = data.url;
+                        statusDiv.innerHTML = "✅ Download liberado! Baixando arquivo...";
+                        
+                        // Download via Blob para não abrir o vídeo no navegador
+                        const fileResponse = await fetch(data.url);
+                        const blob = await fileResponse.blob();
+                        const downloadUrl = window.URL.createObjectURL(blob);
+                        
+                        const a = document.createElement('a');
+                        a.href = downloadUrl;
+                        a.download = `baixador_universal_${Date.now()}.${format === 'audio' ? 'mp3' : 'mp4'}`;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        window.URL.revokeObjectURL(downloadUrl);
                         
                         setTimeout(() => {
                             document.getElementById('linkInput').value = '';
@@ -168,12 +187,14 @@
                         sucesso = true;
                     }
                 } catch (error) {
-                    // Pula silenciosamente para o próximo servidor em caso de falha na conexão/CORS
+                    // Isso mostra no console do navegador (F12) o motivo real da falha (CORS ou 404)
+                    console.error(`Falha ao conectar com ${apiUrl}:`, error);
+                    continue;
                 }
             }
 
             if (!sucesso) {
-                statusDiv.innerHTML = "❌ Erro: Todos os servidores falharam. Verifique o link e tente de novo.";
+                statusDiv.innerHTML = "❌ Erro: As APIs públicas estão bloqueadas. Pressione F12 para ver o motivo.";
                 statusDiv.style.color = "#FF3333";
             }
 
