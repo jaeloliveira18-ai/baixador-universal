@@ -27,15 +27,8 @@
             width: 100%;
             max-width: 400px;
         }
-        h2 { 
-            margin-top: 0; 
-            letter-spacing: 1px;
-        }
-        p {
-            font-size: 12px;
-            color: #aaaaaa;
-            margin-bottom: 20px;
-        }
+        h2 { margin-top: 0; letter-spacing: 1px; }
+        p { font-size: 12px; color: #aaaaaa; margin-bottom: 20px; }
         input[type="url"], select {
             width: 100%;
             padding: 12px;
@@ -46,6 +39,12 @@
             border-radius: 6px;
             box-sizing: border-box;
             font-family: inherit;
+        }
+        #customInstance {
+            border: 1px dashed #555;
+            color: #888;
+            font-size: 11px;
+            padding: 8px;
         }
         input[type="url"]:focus, select:focus {
             outline: none;
@@ -65,19 +64,14 @@
             transition: 0.2s;
             font-family: inherit;
         }
-        button:active { 
-            background-color: #00cc00; 
-            transform: scale(0.98);
-        }
-        button:disabled {
-            background-color: #555;
-            cursor: not-allowed;
-        }
-        #status { 
-            margin-top: 15px; 
-            font-size: 14px; 
-            word-wrap: break-word; 
+        button:active { background-color: #00cc00; transform: scale(0.98); }
+        button:disabled { background-color: #555; cursor: not-allowed; }
+        #status {
+            margin-top: 15px;
+            font-size: 13px;
+            word-wrap: break-word;
             min-height: 20px;
+            text-align: left;
         }
         .assinatura {
             margin-top: 25px;
@@ -93,27 +87,36 @@
     <div class="container">
         <h2>BAIXADOR UNIVERSAL</h2>
         <p>Suporta YouTube, Instagram, TikTok, Kwai, X</p>
-        
+
         <input type="url" id="linkInput" placeholder="Cole o link do vídeo aqui..." required autocomplete="off">
-        
+
         <select id="formatSelect">
             <option value="video">Baixar Vídeo (MP4)</option>
             <option value="audio">Baixar Apenas Áudio (MP3)</option>
         </select>
-        
+
+        <input type="url" id="customInstance" placeholder="Sua própria API (opcional): https://sua-api.app/" autocomplete="off">
+
         <button onclick="baixarMidia()" id="btnBaixar">Baixar Agora</button>
-        
+
         <div id="status"></div>
-        
+
         <div class="assinatura">Criado por OCruel</div>
     </div>
 
     <script>
+        // Salva a instância própria quando o usuário digita
+        document.getElementById('customInstance').addEventListener('change', (e) => {
+            localStorage.setItem('cobaltInstance', e.target.value.trim());
+        });
+        document.getElementById('customInstance').value = localStorage.getItem('cobaltInstance') || '';
+
         async function baixarMidia() {
             const link = document.getElementById('linkInput').value.trim();
             const format = document.getElementById('formatSelect').value;
             const statusDiv = document.getElementById('status');
             const btn = document.getElementById('btnBaixar');
+            const custom = localStorage.getItem('cobaltInstance') || '';
 
             if (!link) {
                 statusDiv.innerHTML = "⚠️ Cole um link válido antes de baixar!";
@@ -123,23 +126,19 @@
 
             btn.disabled = true;
             btn.innerText = "Processando...";
-            statusDiv.innerHTML = "Buscando nos servidores globais...";
             statusDiv.style.color = "#00FF00";
 
-            // Endpoints atualizados e proxies CORS conhecidos
-            const servidores = [
-                "https://api.cobalt.tools/",       // API Oficial (V10)
-                "https://cobalt-api.kwiatek.xyz/", // Instância pública comunitária
-                "https://cobalt.api horizn.cloud/" // Backup
-            ];
-
+            // Sua instância (se configurada) tem prioridade; depois, públicas SEM Turnstile
+            const servidores = [custom, "https://cobaltapi.cjs.nz/"].filter(Boolean);
+            const erros = [];
             let sucesso = false;
 
             for (let apiUrl of servidores) {
-                if (sucesso) break;
-                
+                let host;
+                try { host = new URL(apiUrl).host; } catch { host = apiUrl; }
+                statusDiv.innerHTML = "🔄 Tentando servidor: " + host + "...";
+
                 try {
-                    // Requisição padrão da API v10+ do Cobalt
                     const response = await fetch(apiUrl, {
                         method: "POST",
                         headers: {
@@ -150,52 +149,62 @@
                             url: link,
                             downloadMode: format === 'audio' ? 'audio' : 'auto',
                             audioFormat: "mp3",
-                            filenameStyle: "basic",
-                            youtubeVideoCodec: "h264"
+                            youtubeVideoCodec: "h264",
+                            filenameStyle: "pretty"
                         })
                     });
 
-                    const data = await response.json();
-                    console.log(`Resposta de ${apiUrl}:`, data);
+                    let data = null;
+                    try { data = await response.json(); } catch {}
 
-                    // Erro de API (ex: link inválido, servidor sem API key)
-                    if (data.status === "error" || !data.url) {
-                        console.warn(`Erro na API ${apiUrl}:`, data);
-                        continue; 
+                    if (!response.ok) {
+                        erros.push(host + ": HTTP " + response.status + " (" + (data?.error?.code || "acesso negado") + ")");
+                        continue;
                     }
 
-                    if (data.url) {
-                        statusDiv.innerHTML = "✅ Download liberado! Baixando arquivo...";
-                        
-                        // Download via Blob para não abrir o vídeo no navegador
-                        const fileResponse = await fetch(data.url);
+                    if (data.status === "error" || (!data.url && !data.picker)) {
+                        erros.push(host + ": " + (data?.error?.code || "resposta inválida"));
+                        continue;
+                    }
+
+                    // Pega o link direto (ou o primeiro item, se for lista/picker)
+                    const fileUrl = data.url || (data.picker && data.picker[0].url);
+                    if (!fileUrl) { erros.push(host + ": sem URL de mídia"); continue; }
+
+                    statusDiv.innerHTML = "✅ Mídia encontrada! Baixando arquivo...";
+
+                    // Baixa via Blob para forçar o save (não abre no player)
+                    try {
+                        const fileResponse = await fetch(fileUrl);
                         const blob = await fileResponse.blob();
+                        const ext = format === 'audio' ? 'mp3' : 'mp4';
+                        const nome = data.filename || ("baixador_universal_" + Date.now() + "." + ext);
                         const downloadUrl = window.URL.createObjectURL(blob);
-                        
                         const a = document.createElement('a');
                         a.href = downloadUrl;
-                        a.download = `baixador_universal_${Date.now()}.${format === 'audio' ? 'mp3' : 'mp4'}`;
+                        a.download = nome;
                         document.body.appendChild(a);
                         a.click();
                         a.remove();
                         window.URL.revokeObjectURL(downloadUrl);
-                        
-                        setTimeout(() => {
-                            document.getElementById('linkInput').value = '';
-                        }, 2000);
-                        
-                        sucesso = true;
+                    } catch (e) {
+                        // Se o CORS bloquear o arquivo, abre em nova aba como plano B
+                        window.open(fileUrl, "_blank");
                     }
+
+                    setTimeout(() => { document.getElementById('linkInput').value = ''; }, 2000);
+                    sucesso = true;
+                    break;
                 } catch (error) {
-                    // Isso mostra no console do navegador (F12) o motivo real da falha (CORS ou 404)
-                    console.error(`Falha ao conectar com ${apiUrl}:`, error);
-                    continue;
+                    erros.push(host + ": bloqueado por CORS ou offline");
+                    console.error("Falha em " + host + ":", error);
                 }
             }
 
             if (!sucesso) {
-                statusDiv.innerHTML = "❌ Erro: As APIs públicas estão bloqueadas. Pressione F12 para ver o motivo.";
                 statusDiv.style.color = "#FF3333";
+                statusDiv.innerHTML = "❌ Nenhum servidor funcionou:<br>• " + erros.join("<br>• ") +
+                    "<br><br>💡 Solução definitiva: hospede sua própria API e cole no campo 'Sua própria API'.";
             }
 
             btn.disabled = false;
