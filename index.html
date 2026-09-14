@@ -167,6 +167,7 @@
         <select id="formatSelect">
             <option value="video">🎬 Baixar Vídeo (MP4)</option>
             <option value="audio">🎵 Baixar Apenas Áudio (MP3)</option>
+            <option value="photo">🖼️ Baixar Imagem (JPG)</option>
         </select>
 
         <div id="qualityWrap">
@@ -193,7 +194,7 @@
             <select id="ytDub">
                 <option value="" selected>🔊 Áudio original</option>
                 <option value="pt">🇧 Dublagem em Português</option>
-                <option value="en">🇺 Dublagem em Inglês</option>
+                <option value="en">🇺🇸 Dublagem em Inglês</option>
                 <option value="es">🇪🇸 Dublagem em Espanhol</option>
             </select>
             <select id="ytSub">
@@ -244,13 +245,13 @@
         <div class="modal">
             <button class="modal-fechar" id="btnFechar" aria-label="Fechar">✕</button>
             <h2>Para que serve este app?</h2>
-            <p class="modal-intro">O <strong>Baixador Universal</strong> salva vídeos e músicas das redes sociais direto no seu dispositivo — sem anúncios, sem marca d'água no arquivo e sem instalar nada. Perfeito para repostar no WhatsApp, editar ou guardar offline.<br>📲 <strong>Android:</strong> toque em "Instalar app" e receba links direto do Compartilhar do Instagram/TikTok.<br>🍏 <strong>iPhone:</strong> no Safari, toque em Compartilhar → "Adicionar à Tela de Início".<br>🖼️ <strong>Carrosséis:</strong> posts com várias mídias mostram uma grade para você escolher qual baixar.</p>
+            <p class="modal-intro">O <strong>Baixador Universal</strong> salva vídeos, músicas e fotos das redes sociais direto no seu dispositivo — sem anúncios e sem marca d'água.<br>🎬 <strong>Vídeo:</strong> baixa o MP4.<br>🎵 <strong>Áudio:</strong> extrai o MP3.<br>🖼️ <strong>Imagem:</strong> salva a foto do post (ou a capa do YouTube).<br>📲 <strong>Android:</strong> instale e receba links do Compartilhar.<br>🍏 <strong>iPhone:</strong> Safari → Compartilhar → "Adicionar à Tela de Início".</p>
             <h3>📋 Passo a passo</h3>
             <ol class="passos">
-                <li>Abra a rede social e ache o vídeo.</li>
+                <li>Abra a rede social e ache o vídeo ou foto.</li>
                 <li>Toque em <strong>Compartilhar → Copiar link</strong> (ou compartilhe direto pro app).</li>
                 <li>Cole no campo ou toque em 📋.</li>
-                <li>Escolha formato, qualidade e opções extras.</li>
+                <li>Escolha o formato: Vídeo, Áudio ou Imagem.</li>
                 <li>Toque em <strong>"Baixar agora"</strong> e acompanhe a barra de progresso.</li>
             </ol>
             <h3>✅ Redes suportadas</h3>
@@ -342,16 +343,26 @@
             const h = hostDe(url);
             return h === 'youtube.com' || h.endsWith('.youtube.com') || h === 'youtu.be';
         }
+        function ytId(link) {
+            try {
+                const u = new URL(link);
+                if (u.hostname.includes('youtu.be')) return u.pathname.slice(1, 12);
+                if (u.searchParams.get('v')) return u.searchParams.get('v').slice(0, 11);
+                const m = u.pathname.match(/\/(shorts|embed|live|v)\/([\w-]{11})/);
+                if (m) return m[2];
+            } catch {}
+            return null;
+        }
         function atualizarVisibilidade() {
             const formato = $('formatSelect').value; const link = $('linkInput').value;
-            $('qualityWrap').hidden = (formato === 'audio');
+            $('qualityWrap').hidden = (formato !== 'video');
             $('bitWrap').hidden = (formato !== 'audio');
             $('ytWrap').hidden = !(formato === 'video' && ehYouTube(link));
         }
         $('linkInput').addEventListener('input', (e) => { detectarRede(e.target.value); atualizarVisibilidade(); });
         $('formatSelect').addEventListener('change', atualizarVisibilidade);
 
-        // ----- Tradutor de erros (do api.md oficial) -----
+        // ----- Tradutor de erros -----
         const MSG_ERRO = {
             'youtube.login': '🍪 O YouTube exigiu login desse servidor (a Fase C dos cookies resolve!).',
             'content.video.private': '🔒 Esse vídeo é privado.',
@@ -403,13 +414,18 @@
 
         // ----- Download de arquivo -----
         let ultimoBlob = null, ultimoNome = '';
-        async function baixarArquivo(url, nomeFallback) {
+        async function baixarArquivo(url, nomeFallback, opts = {}) {
             mostrarProgresso();
             const resp = await fetch(url);
-            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            if (!resp.ok) { esconderProgresso(); throw new Error('HTTP ' + resp.status); }
             const blob = await lerComProgresso(resp);
             esconderProgresso();
-            const nome = nomeFallback || ('baixador_universal_' + Date.now() + '.mp4');
+            if (opts.expectImage && !blob.type.startsWith('image/')) throw new Error('NOT_IMAGE');
+            if (opts.minSize && blob.size < opts.minSize) throw new Error('TOO_SMALL');
+            let nome = nomeFallback || ('baixador_universal_' + Date.now() + '.mp4');
+            if (opts.expectImage && !/\.(jpe?g|png|webp)$/i.test(nome)) {
+                nome = nome.replace(/\.[a-z0-9]+$/i, '') + '.jpg';
+            }
             const downloadUrl = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = downloadUrl; a.download = nome;
@@ -476,7 +492,7 @@
         $('btnDivulgar').onclick = async () => {
             const dados = {
                 title: 'Baixador Universal',
-                text: '⚡ Baixador Universal — baixe vídeos e áudios das redes sociais sem anúncios, direto no celular. Desenvolvido por OCruel!',
+                text: '⚡ Baixador Universal — baixe vídeos, áudios e fotos das redes sociais sem anúncios, direto no celular. Desenvolvido por OCruel!',
                 url: 'https://jaeloliveira18-ai.github.io/baixador-universal/'
             };
             if (navigator.share) { try { await navigator.share(dados); } catch {} }
@@ -533,51 +549,107 @@
             btn.disabled = true; btn.innerHTML = '⏳ Processando...';
             statusDiv.style.color = '#9db8ab';
 
-            const servidores = [custom, 'https://cobaltapi.cjs.nz/'].filter(Boolean);
             const erros = [];
             let tratado = false;
 
-            for (let apiUrl of servidores) {
-                let host; try { host = new URL(apiUrl).host; } catch { host = apiUrl; }
-                statusDiv.innerHTML = '🔄 Tentando servidor: ' + host + '...';
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            url: link,
-                            downloadMode: format === 'audio' ? 'audio' : 'auto',
-                            audioFormat: 'mp3',
-                            audioBitrate: $('bitrateSelect').value,
-                            videoQuality: $('qualitySelect').value,
-                            youtubeVideoCodec: $('ytCodec').value,
-                            youtubeDubLang: $('ytDub').value || undefined,
-                            subtitleLang: $('ytSub').value || undefined,
-                            youtubeBetterAudio: format === 'audio',
-                            alwaysProxy: $('chkPrivacidade').checked,
-                            filenameStyle: 'pretty'
-                        })
-                    });
-                    let data = null; try { data = await response.json(); } catch {}
-                    if (response.status === 429) { erros.push(host + ': 🚦 servidor ocupado, espere ~1 min'); continue; }
-                    if (!response.ok) { erros.push(host + ': ' + msgAmigavel(data?.error?.code || ('HTTP ' + response.status))); continue; }
-                    if (data.status === 'error') { erros.push(host + ': ' + msgAmigavel(data?.error?.code)); continue; }
-                    if (data.status === 'picker' && data.picker && data.picker.length) { mostrarPicker(data); tratado = true; break; }
-                    if (!data.url) { erros.push(host + ': ' + msgAmigavel('fetch.empty')); continue; }
-
-                    statusDiv.innerHTML = '✅ Mídia encontrada! Baixando arquivo...';
-                    statusDiv.style.color = '#00ff88';
-                    try {
-                        await baixarArquivo(data.url, data.filename);
-                    } catch (e) {
-                        window.open(data.url, '_blank'); esconderProgresso();
+            // ----- MODO IMAGEM no YouTube = baixar a CAPA -----
+            if (format === 'photo' && ehYouTube(link)) {
+                const id = ytId(link);
+                if (id) {
+                    statusDiv.innerHTML = '🖼️ Baixando a capa do YouTube...';
+                    let okCapa = false;
+                    const capas = [
+                        'https://i.ytimg.com/vi/' + id + '/maxresdefault.jpg',
+                        'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg'
+                    ];
+                    for (const c of capas) {
+                        try {
+                            await baixarArquivo(c, 'capa_youtube_' + id + '.jpg', { expectImage: true, minSize: c.includes('maxres') ? 9000 : 0 });
+                            okCapa = true; break;
+                        } catch (e) { if (e.message === 'NOT_IMAGE' || e.message === 'TOO_SMALL') continue; }
                     }
-                    setTimeout(() => { $('linkInput').value = ''; $('chipRede').hidden = true; }, 2000);
-                    tratado = true;
-                    break;
-                } catch (error) {
-                    erros.push(host + ': bloqueado por CORS ou offline');
-                    console.error('Falha em ' + host + ':', error);
+                    if (okCapa) {
+                        tratado = true;
+                    } else {
+                        window.open(capas[1], '_blank');
+                        statusDiv.innerHTML = '🖼️ A capa abriu em outra aba: toque e segure nela para salvar.';
+                        statusDiv.style.color = '#ffd54f';
+                        tratado = true;
+                    }
+                }
+            }
+
+            // ----- Servidores (para todos os outros casos) -----
+            if (!tratado) {
+                const servidores = [custom, 'https://cobaltapi.cjs.nz/'].filter(Boolean);
+                for (let apiUrl of servidores) {
+                    let host; try { host = new URL(apiUrl).host; } catch { host = apiUrl; }
+                    statusDiv.innerHTML = '🔄 Tentando servidor: ' + host + '...';
+                    try {
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                url: link,
+                                downloadMode: format === 'audio' ? 'audio' : 'auto',
+                                audioFormat: 'mp3',
+                                audioBitrate: $('bitrateSelect').value,
+                                videoQuality: $('qualitySelect').value,
+                                youtubeVideoCodec: $('ytCodec').value,
+                                youtubeDubLang: $('ytDub').value || undefined,
+                                subtitleLang: $('ytSub').value || undefined,
+                                youtubeBetterAudio: format === 'audio',
+                                alwaysProxy: $('chkPrivacidade').checked,
+                                filenameStyle: 'pretty'
+                            })
+                        });
+                        let data = null; try { data = await response.json(); } catch {}
+                        if (response.status === 429) { erros.push(host + ': 🚦 servidor ocupado, espere ~1 min'); continue; }
+                        if (!response.ok) { erros.push(host + ': ' + msgAmigavel(data?.error?.code || ('HTTP ' + response.status))); continue; }
+                        if (data.status === 'error') { erros.push(host + ': ' + msgAmigavel(data?.error?.code)); continue; }
+
+                        // ----- MODO IMAGEM (redes sociais) -----
+                        if (format === 'photo') {
+                            if (data.status === 'picker' && data.picker) {
+                                const fotos = data.picker.filter(i => i.type === 'photo');
+                                if (!fotos.length) { erros.push(host + ': esse post só tem VÍDEOS, não tem fotos 🎬'); continue; }
+                                if (fotos.length === 1) {
+                                    await baixarArquivo(fotos[0].url, 'foto_1.jpg', { expectImage: true });
+                                } else {
+                                    mostrarPicker({ picker: fotos });
+                                }
+                                tratado = true; break;
+                            }
+                            if (data.url) {
+                                try {
+                                    await baixarArquivo(data.url, data.filename, { expectImage: true });
+                                    tratado = true; break;
+                                } catch (e) {
+                                    if (e.message === 'NOT_IMAGE') { erros.push(host + ': esse link é um VÍDEO, não uma foto — use o formato 🎬 Vídeo'); continue; }
+                                    throw e;
+                                }
+                            }
+                            erros.push(host + ': nenhuma foto encontrada nesse link'); continue;
+                        }
+
+                        // ----- Modos vídeo/áudio -----
+                        if (data.status === 'picker' && data.picker && data.picker.length) { mostrarPicker(data); tratado = true; break; }
+                        if (!data.url) { erros.push(host + ': ' + msgAmigavel('fetch.empty')); continue; }
+
+                        statusDiv.innerHTML = '✅ Mídia encontrada! Baixando arquivo...';
+                        statusDiv.style.color = '#00ff88';
+                        try {
+                            await baixarArquivo(data.url, data.filename);
+                        } catch (e) {
+                            window.open(data.url, '_blank'); esconderProgresso();
+                        }
+                        setTimeout(() => { $('linkInput').value = ''; $('chipRede').hidden = true; }, 2000);
+                        tratado = true;
+                        break;
+                    } catch (error) {
+                        erros.push(host + ': bloqueado por CORS ou offline');
+                        console.error('Falha em ' + host + ':', error);
+                    }
                 }
             }
 
