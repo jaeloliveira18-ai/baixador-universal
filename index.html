@@ -1,1158 +1,187 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baixador Universal</title>
-    <meta name="theme-color" content="#05080a">
-    <link rel="manifest" href="manifest.webmanifest">
-    <link rel="icon" href="icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="icon-512.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --verde: #00e68a;
-            --verde-2: #00b36b;
-            --verde-glow: rgba(0, 230, 138, 0.35);
-            --texto: #edf7f2;
-            --suave: #8fa89c;
-            --borda: rgba(255, 255, 255, 0.08);
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 28px 18px;
-            font-family: 'Sora', system-ui, sans-serif;
-            background: #05080a;
-            color: var(--texto);
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: 
-                radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0, 230, 138, 0.12), transparent 50%),
-                radial-gradient(ellipse 60% 40% at 90% 100%, rgba(0, 140, 255, 0.08), transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .card {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 420px;
-            padding: 32px 28px;
-            border-radius: 32px;
-            border: 1px solid var(--borda);
-            background: linear-gradient(165deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            box-shadow: 
-                0 25px 50px -12px rgba(0, 0, 0, 0.55),
-                0 0 0 1px rgba(255,255,255,0.03) inset;
-            animation: subir 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        .card.pulse {
-            animation: pulso 0.8s ease;
-        }
-
-        @keyframes subir {
-            from { opacity: 0; transform: translateY(24px) scale(0.98); }
-            to { opacity: 1; transform: none; }
-        }
-
-        @keyframes pulso {
-            0% { box-shadow: 0 0 0 0 var(--verde-glow); }
-            100% { box-shadow: 0 0 0 32px transparent; }
-        }
-
-        .topo {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 28px;
-            gap: 12px;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .logo-icone {
-            width: 48px;
-            height: 48px;
-            border-radius: 16px;
-            display: grid;
-            place-items: center;
-            background: linear-gradient(135deg, var(--verde), var(--verde-2));
-            color: #02140c;
-            box-shadow: 0 10px 28px var(--verde-glow);
-        }
-
-        h1 {
-            font-size: 20px;
-            font-weight: 800;
-            letter-spacing: -0.4px;
-            color: #fff;
-            line-height: 1.15;
-        }
-
-        h1 span {
-            background: linear-gradient(90deg, var(--verde), #7af5c4);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .tagline {
-            margin-top: 3px;
-            font-size: 11.5px;
-            color: var(--suave);
-            font-weight: 500;
-        }
-
-        .topo-acoes {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .btn-info, .btn-instalar {
-            border-radius: 999px;
-            border: 1px solid var(--borda);
-            background: rgba(255,255,255,0.05);
-            color: #fff;
-            cursor: pointer;
-            display: grid;
-            place-items: center;
-            transition: all 0.2s ease;
-        }
-
-        .btn-info {
-            width: 40px;
-            height: 40px;
-            font-size: 15px;
-        }
-
-        .btn-instalar {
-            height: 40px;
-            padding: 0 15px;
-            font-family: inherit;
-            font-size: 12px;
-            font-weight: 700;
-            color: #7af5c4;
-            border-color: rgba(0, 230, 138, 0.3);
-        }
-
-        .btn-info:hover, .btn-instalar:hover {
-            background: rgba(0, 230, 138, 0.12);
-            border-color: rgba(0, 230, 138, 0.4);
-            box-shadow: 0 0 18px rgba(0, 230, 138, 0.2);
-        }
-
-        .campo-label {
-            display: block;
-            text-align: left;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--suave);
-            margin: 18px 0 7px;
-            letter-spacing: 0.2px;
-        }
-
-        .campo-link {
-            position: relative;
-        }
-
-        #linkInput {
-            padding-right: 54px;
-        }
-
-        #btnColar {
-            position: absolute;
-            right: 9px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(255,255,255,0.07);
-            border: none;
-            border-radius: 11px;
-            padding: 9px 11px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: 0.2s;
-        }
-
-        #btnColar:hover {
-            background: rgba(0, 230, 138, 0.15);
-        }
-
-        input[type="url"], select {
-            width: 100%;
-            padding: 15px 16px;
-            border-radius: 15px;
-            border: 1px solid var(--borda);
-            background: rgba(0, 0, 0, 0.28);
-            color: #fff;
-            font-family: inherit;
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
-
-        select option {
-            background: #0c1411;
-            color: #fff;
-        }
-
-        input[type="url"]:focus, select:focus {
-            outline: none;
-            border-color: var(--verde);
-            box-shadow: 0 0 0 3px rgba(0, 230, 138, 0.12);
-            background: rgba(0, 0, 0, 0.35);
-        }
-
-        input::placeholder {
-            color: #5a6e66;
-        }
-
-        .chip-rede {
-            margin-top: 10px;
-            font-size: 11.5px;
-            padding: 6px 13px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-weight: 600;
-        }
-
-        .chip-rede.ok {
-            background: rgba(0, 230, 138, 0.1);
-            color: #7af5c4;
-            border: 1px solid rgba(0, 230, 138, 0.28);
-        }
-
-        .chip-rede.breve {
-            background: rgba(255, 193, 7, 0.1);
-            color: #ffd54f;
-            border: 1px solid rgba(255, 193, 7, 0.28);
-        }
-
-        .chip-rede.nao {
-            background: rgba(255, 107, 107, 0.1);
-            color: #ff8a8a;
-            border: 1px solid rgba(255, 107, 107, 0.3);
-        }
-
-        #ytWrap select + select,
-        #bitWrap select {
-            margin-top: 9px;
-        }
-
-        details.avancado {
-            margin-top: 18px;
-            padding: 12px 16px;
-            border: 1px dashed rgba(255,255,255,0.12);
-            border-radius: 16px;
-            background: rgba(255,255,255,0.02);
-        }
-
-        details.avancado summary {
-            cursor: pointer;
-            font-size: 12.5px;
-            color: var(--suave);
-            font-weight: 500;
-        }
-
-        details.avancado input {
-            margin-top: 12px;
-            font-size: 13px;
-        }
-
-        .chk-row {
-            display: flex;
-            gap: 9px;
-            align-items: center;
-            margin-top: 12px;
-            font-size: 12.5px;
-            color: var(--suave);
-        }
-
-        #btnBaixar {
-            margin-top: 24px;
-            width: 100%;
-            padding: 17px;
-            border: none;
-            border-radius: 18px;
-            background: linear-gradient(135deg, var(--verde), var(--verde-2));
-            color: #02140c;
-            font-family: inherit;
-            font-size: 15px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            box-shadow: 0 12px 32px var(--verde-glow);
-            transition: all 0.2s ease;
-        }
-
-        #btnBaixar:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 16px 40px rgba(0, 230, 138, 0.45);
-        }
-
-        #btnBaixar:active:not(:disabled) {
-            transform: scale(0.985);
-        }
-
-        #btnBaixar:disabled {
-            filter: grayscale(0.6) brightness(0.85);
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        #status {
-            margin-top: 18px;
-            min-height: 22px;
-            font-size: 13px;
-            line-height: 1.55;
-            text-align: left;
-            color: var(--suave);
-            word-wrap: break-word;
-        }
-
-        #progresso {
-            margin-top: 14px;
-        }
-
-        .barra {
-            height: 7px;
-            background: rgba(255,255,255,0.07);
-            border-radius: 99px;
-            overflow: hidden;
-        }
-
-        #barraProg {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--verde), #7af5c4);
-            border-radius: 99px;
-            transition: width 0.15s ease;
-        }
-
-        #barraProg.indeterminada {
-            width: 32%;
-            animation: desliza 1.15s ease-in-out infinite alternate;
-        }
-
-        @keyframes desliza {
-            from { margin-left: 0; }
-            to { margin-left: 68%; }
-        }
-
-        #progTexto {
-            font-size: 11.5px;
-            color: var(--suave);
-            display: block;
-            margin-top: 6px;
-        }
-
-        #pickerBox {
-            margin-top: 16px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 9px;
-        }
-
-        .pick-item {
-            position: relative;
-            border: 1px solid var(--borda);
-            border-radius: 14px;
-            overflow: hidden;
-            cursor: pointer;
-            background: rgba(255,255,255,0.04);
-            padding: 0;
-            aspect-ratio: 1;
-            transition: 0.2s;
-        }
-
-        .pick-item:hover {
-            border-color: rgba(0, 230, 138, 0.4);
-            transform: scale(1.03);
-        }
-
-        .pick-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .pick-item span {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.7);
-            font-size: 10.5px;
-            padding: 5px;
-            color: #fff;
-            text-align: center;
-        }
-
-        .pick-audio {
-            grid-column: 1 / -1;
-            padding: 13px;
-            border-radius: 14px;
-            border: 1px solid rgba(0, 230, 138, 0.35);
-            background: rgba(0, 230, 138, 0.1);
-            color: #7af5c4;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: inherit;
-            transition: 0.2s;
-        }
-
-        .pick-audio:hover {
-            background: rgba(0, 230, 138, 0.18);
-        }
-
-        .acoes button {
-            margin-top: 14px;
-            width: 100%;
-            padding: 14px;
-            border-radius: 15px;
-            border: 1px solid rgba(0, 230, 138, 0.35);
-            background: rgba(0, 230, 138, 0.1);
-            color: #7af5c4;
-            font-family: inherit;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .acoes button:hover {
-            background: rgba(0, 230, 138, 0.18);
-        }
-
-        .watermark {
-            position: relative;
-            z-index: 1;
-            margin-top: 26px;
-            font-size: 13px;
-            color: var(--suave);
-            letter-spacing: 0.3px;
-            text-align: center;
-        }
-
-        .watermark strong {
-            background: linear-gradient(90deg, var(--verde), #7af5c4);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-weight: 800;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(3, 6, 5, 0.75);
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            opacity: 0;
-            visibility: hidden;
-            transition: 0.28s;
-            z-index: 50;
-        }
-
-        .modal-overlay.aberto {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal {
-            width: 100%;
-            max-width: 440px;
-            max-height: 84vh;
-            overflow-y: auto;
-            background: #0b1210;
-            border: 1px solid var(--borda);
-            border-radius: 28px;
-            padding: 28px;
-            position: relative;
-            transform: translateY(18px) scale(0.97);
-            transition: 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-        }
-
-        .modal-overlay.aberto .modal {
-            transform: none;
-        }
-
-        .modal-fechar {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            border: none;
-            background: rgba(255,255,255,0.07);
-            color: #fff;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .modal-fechar:hover {
-            background: rgba(255,255,255,0.12);
-        }
-
-        .modal h2 {
-            margin: 0 36px 12px 0;
-            font-size: 19px;
-            color: #fff;
-            font-weight: 800;
-        }
-
-        .modal-intro {
-            font-size: 13.5px;
-            line-height: 1.65;
-            color: #c5ddd1;
-        }
-
-        .modal h3 {
-            margin: 22px 0 10px;
-            font-size: 14px;
-            color: var(--verde);
-            font-weight: 700;
-        }
-
-        .passos {
-            margin: 0;
-            padding-left: 20px;
-        }
-
-        .passos li {
-            margin: 9px 0;
-            font-size: 13.5px;
-            line-height: 1.55;
-            color: #c5ddd1;
-        }
-
-        .chips span {
-            display: inline-block;
-            margin: 4px;
-            padding: 5px 11px;
-            border-radius: 999px;
-            background: rgba(0, 230, 138, 0.08);
-            border: 1px solid rgba(0, 230, 138, 0.22);
-            color: #7af5c4;
-            font-size: 11.5px;
-            font-weight: 500;
-        }
-
-        .modal-nota {
-            font-size: 12.5px;
-            line-height: 1.6;
-            color: var(--suave);
-            margin-top: 8px;
-        }
-
-        .modal-credito {
-            margin-top: 18px;
-            font-size: 12.5px;
-            font-weight: 700;
-            color: #7af5c4;
-        }
-
-        .hist-item {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 12px 14px;
-            border: 1px solid var(--borda);
-            border-radius: 14px;
-            margin-top: 9px;
-            font-size: 12.5px;
-            background: rgba(255,255,255,0.02);
-        }
-
-        .hist-item .hn {
-            color: #fff;
-            font-weight: 700;
-        }
-
-        .hist-item .hm {
-            color: var(--suave);
-            word-break: break-all;
-        }
-
-        .hist-vazio {
-            color: var(--suave);
-            font-size: 13.5px;
-        }
-
-        .btn-verde, .btn-vermelho {
-            margin-top: 16px;
-            width: 100%;
-            padding: 13px;
-            border-radius: 14px;
-            font-family: inherit;
-            font-size: 13.5px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .btn-verde {
-            border: 1px solid rgba(0, 230, 138, 0.35);
-            background: rgba(0, 230, 138, 0.1);
-            color: #7af5c4;
-        }
-
-        .btn-verde:hover {
-            background: rgba(0, 230, 138, 0.18);
-        }
-
-        .btn-vermelho {
-            border: 1px solid rgba(255, 107, 107, 0.35);
-            background: rgba(255, 107, 107, 0.1);
-            color: #ff8a8a;
-        }
-
-        .btn-vermelho:hover {
-            background: rgba(255, 107, 107, 0.18);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Baixador Universal</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #00FF00;
+      font-family: 'Courier New', Courier, monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    .container {
+      background-color: #1e1e1e;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 255, 0, 0.15);
+      width: 100%;
+      max-width: 400px;
+    }
+    h2 {
+      margin-top: 0;
+      letter-spacing: 1px;
+    }
+    p {
+      font-size: 13px;
+      color: #aaaaaa;
+      margin-bottom: 20px;
+    }
+    input[type="url"], select {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      background: #0d0d0d;
+      border: 1px solid #00FF00;
+      color: #ffffff;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+    input[type="url"]:focus, select:focus {
+      outline: none;
+      box-shadow: 0 0 8px #00FF00;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: #00FF00;
+      color: #000000;
+      border: none;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      text-transform: uppercase;
+      transition: 0.2s;
+      font-family: inherit;
+    }
+    button:active {
+      background-color: #00cc00;
+      transform: scale(0.98);
+    }
+    #status {
+      margin-top: 15px;
+      font-size: 14px;
+      word-wrap: break-word;
+      min-height: 20px;
+    }
+    .assinatura {
+      margin-top: 25px;
+      color: #FF3333;
+      font-weight: bold;
+      font-size: 15px;
+      text-shadow: 0 0 5px rgba(255, 51, 51, 0.4);
+    }
+  </style>
 </head>
 <body>
-    <main class="card" id="card">
-        <header class="topo">
-            <div class="logo">
-                <div class="logo-icone">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-                </div>
-                <div>
-                    <h1>Baixador <span>Universal</span></h1>
-                    <p class="tagline">Instagram • TikTok • X • Facebook e +16 redes</p>
-                </div>
-            </div>
-            <div class="topo-acoes">
-                <button class="btn-info" id="btnHistorico" aria-label="Histórico de downloads" title="Histórico">📜</button>
-                <button class="btn-instalar" id="btnInstalar" hidden>📲 Instalar app</button>
-                <button class="btn-info" id="btnInfo" aria-label="Como usar o app">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
-                </button>
-            </div>
-        </header>
+  <div class="container">
+    <h2>BAIXADOR UNIVERSAL</h2>
+    <p>Suporta Instagram, TikTok, Kwai, X (Twitter), Pinterest</p>
 
-        <label class="campo-label" for="linkInput">Link do vídeo</label>
-        <div class="campo-link">
-            <input type="url" id="linkInput" placeholder="Cole aqui o link do vídeo..." autocomplete="off">
-            <button id="btnColar" title="Colar da área de transferência">📋</button>
-        </div>
-        <div class="chip-rede" id="chipRede" hidden></div>
+    <input type="url" id="linkInput" placeholder="Cole o link do vídeo aqui..." required autocomplete="off">
+    
+    <select id="formatSelect">
+      <option value="video">Baixar Vídeo (MP4)</option>
+      <option value="audio">Baixar Apenas Áudio (MP3)</option>
+    </select>
 
-        <label class="campo-label" for="formatSelect">Formato</label>
-        <select id="formatSelect">
-            <option value="video">🎬 Baixar Vídeo (MP4)</option>
-            <option value="audio">🎵 Baixar Apenas Áudio (MP3)</option>
-            <option value="photo">🖼️ Baixar Imagem (JPG)</option>
-        </select>
+    <button onclick="baixarMidia()" id="btnBaixar">Baixar Agora</button>
+    
+    <div id="status"></div>
+    <div class="assinatura">Criado por OCruel</div>
+  </div>
 
-        <div id="qualityWrap">
-            <label class="campo-label" for="qualitySelect">Qualidade do vídeo</label>
-            <select id="qualitySelect">
-                <option value="max">🏆 Máxima disponível</option>
-                <option value="4320">👑 4320p (8K)</option>
-                <option value="2160">🖥️ 2160p (4K)</option>
-                <option value="1440">💎 1440p (2K)</option>
-                <option value="1080" selected>💯 1080p (Full HD)</option>
-                <option value="720">⚡ 720p (HD)</option>
-                <option value="480">📱 480p (leve)</option>
-                <option value="360">🪶 360p (super leve)</option>
-            </select>
-        </div>
+  <script>
+    async function baixarMidia() {
+      const link = document.getElementById('linkInput').value.trim();
+      const format = document.getElementById('formatSelect').value;
+      const statusDiv = document.getElementById('status');
+      const btn = document.getElementById('btnBaixar');
 
-        <div id="ytWrap" hidden>
-            <label class="campo-label">🎛️ Opções avançadas do YouTube</label>
-            <select id="ytCodec">
-                <option value="h264" selected>📱 H.264 / MP4 (compatível com WhatsApp)</option>
-                <option value="vp9">🎬 VP9 / WebM (qualidade maior)</option>
-                <option value="av1">🚀 AV1 / WebM (mais moderno)</option>
-            </select>
-            <select id="ytDub">
-                <option value="" selected>🔊 Áudio original</option>
-                <option value="pt">🇧 Dublagem em Português</option>
-                <option value="en">🇺🇸 Dublagem em Inglês</option>
-                <option value="es">🇪🇸 Dublagem em Espanhol</option>
-            </select>
-            <select id="ytSub">
-                <option value="" selected>🚫 Sem legendas</option>
-                <option value="pt">💬 Legendas em Português</option>
-                <option value="en">💬 Legendas em Inglês</option>
-                <option value="es">💬 Legendas em Espanhol</option>
-            </select>
-        </div>
+      if (!link) {
+        statusDiv.innerHTML = "⚠️ Cole um link válido antes de baixar!";
+        statusDiv.style.color = "#FF3333";
+        return;
+      }
 
-        <div id="bitWrap" hidden>
-            <label class="campo-label" for="bitrateSelect">Qualidade do áudio (MP3)</label>
-            <select id="bitrateSelect">
-                <option value="320" selected>🎧 320 kbps (qualidade de estúdio)</option>
-                <option value="256">🎧 256 kbps</option>
-                <option value="128">🎧 128 kbps (padrão)</option>
-                <option value="96">🎧 96 kbps (leve)</option>
-            </select>
-        </div>
+      // Bloqueio preventivo do YouTube
+      if (link.includes("youtube.com") || link.includes("youtu.be")) {
+        statusDiv.innerHTML = "⚠️ Suporte ao YouTube desativado. Use links do Instagram, TikTok, Kwai ou X.";
+        statusDiv.style.color = "#FFAA00";
+        return;
+      }
 
-        <details class="avancado">
-            <summary>⚙️ Configuração avançada</summary>
-            <input type="url" id="customInstance" placeholder="Sua própria API (opcional): https://sua-api.app/" autocomplete="off">
-            <label class="chk-row"><input type="checkbox" id="chkPrivacidade"> 🔒 Modo privacidade (baixa através do servidor, escondendo seu IP)</label>
-        </details>
+      btn.disabled = true;
+      btn.innerText = "Processando...";
+      statusDiv.innerHTML = "Buscando nos servidores globais...";
+      statusDiv.style.color = "#00FF00";
 
-        <button id="btnBaixar" onclick="baixarMidia()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-            Baixar agora
-        </button>
+      const servidores = [
+        "https://co.wuk.sh/api/json",
+        "https://cobalt.qwyku.com/api/json",
+        "https://imput.net/api/json",
+        "https://corsproxy.io/?" + encodeURIComponent("https://co.wuk.sh/api/json")
+      ];
 
-        <div id="progresso" hidden>
-            <div class="barra"><div id="barraProg"></div></div>
-            <span id="progTexto"></span>
-        </div>
-        <div id="status"></div>
-        <div id="pickerBox" hidden></div>
-        <div class="acoes" id="acoes" hidden>
-            <button id="btnCompartilhar">📤 Compartilhar agora (WhatsApp, Stories...)</button>
-        </div>
-    </main>
+      let sucesso = false;
 
-    <footer class="watermark">⚡ Desenvolvido por <strong>OCruel</strong> • <span id="contagem">0 downloads</span></footer>
+      for (let apiUrl of servidores) {
+        if (sucesso) break;
 
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal">
-            <button class="modal-fechar" id="btnFechar" aria-label="Fechar">✕</button>
-            <h2>Para que serve este app?</h2>
-            <p class="modal-intro">O <strong>Baixador Universal</strong> salva vídeos, músicas e fotos das redes sociais direto no seu dispositivo — sem anúncios e sem marca d'água.<br><br>🎬 <strong>Vídeo:</strong> baixa o MP4.<br>🎵 <strong>Áudio:</strong> extrai o MP3.<br>🖼️ <strong>Imagem:</strong> salva a foto do post (ou a capa do YouTube).<br>📲 <strong>Android:</strong> instale e receba links do Compartilhar.<br>🍏 <strong>iPhone:</strong> Safari → Compartilhar → "Adicionar à Tela de Início".</p>
-            <h3>📋 Passo a passo</h3>
-            <ol class="passos">
-                <li>Abra a rede social e ache o vídeo ou foto.</li>
-                <li>Toque em <strong>Compartilhar → Copiar link</strong>.</li>
-                <li>Cole no campo ou toque em 📋.</li>
-                <li>Escolha o formato: Vídeo, Áudio ou Imagem.</li>
-                <li>Toque em <strong>"Baixar agora"</strong>.</li>
-            </ol>
-            <h3>✅ Redes suportadas</h3>
-            <div class="chips">
-                <span>Instagram</span><span>TikTok</span><span>X / Twitter</span><span>Facebook</span><span>Reddit</span><span>Pinterest</span><span>Snapchat</span><span>SoundCloud</span><span>Vimeo</span><span>Dailymotion</span><span>Bluesky</span><span>Twitch</span><span>Tumblr</span><span>VK</span><span>Bilibili</span>
-            </div>
-            <p class="modal-nota">🍪 YouTube: autenticação em breve.<br>❌ Threads e Kwai: não suportadas.</p>
-            <button class="btn-verde" id="btnDivulgar">📣 Divulgar o Baixador Universal</button>
-            <p class="modal-credito">⚡ Desenvolvido por OCruel</p>
-        </div>
-    </div>
+        try {
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+              "Accept": "application/json",
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              url: link,
+              isAudioOnly: format === 'audio',
+              aFormat: "mp3",
+              downloadMode: format === 'audio' ? 'audio' : 'auto',
+              audioFormat: "mp3"
+            })
+          });
 
-    <div class="modal-overlay" id="histOverlay">
-        <div class="modal">
-            <button class="modal-fechar" id="btnHistFechar" aria-label="Fechar">✕</button>
-            <h2>📜 Histórico</h2>
-            <p class="modal-intro">Seus últimos downloads ficam guardados só neste aparelho.</p>
-            <div id="histLista"></div>
-            <button class="btn-vermelho" id="btnHistLimpar">🗑️ Limpar histórico</button>
-        </div>
-    </div>
+          if (!response.ok) continue;
 
-    <script>
-        const $ = (id) => document.getElementById(id);
+          const data = await response.json();
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+          if (data && data.url) {
+            statusDiv.innerHTML = "✅ Download liberado! Salvando arquivo...";
+            window.location.href = data.url;
+
+            setTimeout(() => {
+              document.getElementById('linkInput').value = '';
+            }, 2000);
+
+            sucesso = true;
+          }
+        } catch (error) {
+          // Continua para o próximo servidor silenciosamente
         }
+      }
 
-        let deferredPrompt = null;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); deferredPrompt = e; $('btnInstalar').hidden = false;
-        });
+      if (!sucesso) {
+        statusDiv.innerHTML = "❌ Servidores ocupados ou link privado/não suportado. Tente novamente.";
+        statusDiv.style.color = "#FF3333";
+      }
 
-        const ehIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-        const btnInstalar = $('btnInstalar');
-        if (ehIOS) {
-            btnInstalar.hidden = false;
-            btnInstalar.textContent = '🍏 Instalar';
-            btnInstalar.onclick = () => abrirAjuda();
-        } else {
-            btnInstalar.onclick = async () => {
-                if (!deferredPrompt) return;
-                deferredPrompt.prompt(); await deferredPrompt.userChoice;
-                deferredPrompt = null; btnInstalar.hidden = true;
-            };
-        }
-
-        (function () {
-            const p = new URLSearchParams(location.search);
-            const bruto = p.get('url') || p.get('text') || p.get('title') || '';
-            if (!bruto) return;
-            const m = bruto.match(/https?:\/\/\S+/);
-            const valor = m ? m[0] : bruto;
-            $('linkInput').value = valor;
-            history.replaceState({}, '', location.pathname);
-            setTimeout(() => { detectarRede(valor); atualizarVisibilidade(); }, 100);
-        })();
-
-        const MAPA = [
-            ['instagram.com', '📸 Instagram', 'ok'], ['tiktok.com', '🎵 TikTok', 'ok'],
-            ['twitter.com', '🐦 X / Twitter', 'ok'], ['x.com', '🐦 X / Twitter', 'ok'],
-            ['facebook.com', '📘 Facebook', 'ok'], ['fb.watch', '📘 Facebook', 'ok'],
-            ['reddit.com', '👽 Reddit', 'ok'], ['pinterest.com', '📌 Pinterest', 'ok'],
-            ['snapchat.com', '👻 Snapchat', 'ok'], ['soundcloud.com', '🎧 SoundCloud', 'ok'],
-            ['threads.net', '🧵 Threads', 'nao'], ['threads.com', '🧵 Threads', 'nao'],
-            ['kwai.com', '❌ Kwai', 'nao'], ['youtube.com', '🍪 YouTube', 'breve'], ['youtu.be', '🍪 YouTube', 'breve']
-        ];
-
-        function hostDe(u) {
-            try { if (!/^https?:/i.test(u)) u = 'https://' + u; return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; }
-        }
-
-        function detectarRede(url) {
-            const chip = $('chipRede'); const u = url.toLowerCase();
-            if (u.includes('facebook.com/stories') || u.includes('facebook.com/story')) {
-                chip.hidden = false; chip.className = 'chip-rede nao';
-                chip.textContent = '📘 Facebook Stories — não suportado ❌'; return;
-            }
-            const h = hostDe(url);
-            if (!h) { chip.hidden = true; return; }
-            const achado = MAPA.find(([d]) => h === d || h.endsWith('.' + d));
-            if (!achado) { chip.hidden = true; return; }
-            chip.hidden = false; chip.className = 'chip-rede ' + achado[2];
-            chip.textContent = achado[2] === 'ok' ? achado[1] + ' — suportada ✅'
-                : achado[2] === 'breve' ? achado[1] + ' — em breve (autenticação) 🍪'
-                : achado[1] + ' — não suportada ❌';
-        }
-
-        function ehYouTube(url) {
-            const h = hostDe(url);
-            return h === 'youtube.com' || h.endsWith('.youtube.com') || h === 'youtu.be';
-        }
-
-        function ytId(link) {
-            try {
-                const u = new URL(link);
-                if (u.hostname.includes('youtu.be')) return u.pathname.slice(1, 12);
-                if (u.searchParams.get('v')) return u.searchParams.get('v').slice(0, 11);
-                const m = u.pathname.match(/\/(shorts|embed|live|v)\/([\w-]{11})/);
-                if (m) return m[2];
-            } catch {}
-            return null;
-        }
-
-        function atualizarVisibilidade() {
-            const formato = $('formatSelect').value; const link = $('linkInput').value;
-            $('qualityWrap').hidden = (formato !== 'video');
-            $('bitWrap').hidden = (formato !== 'audio');
-            $('ytWrap').hidden = !(formato === 'video' && ehYouTube(link));
-        }
-
-        $('linkInput').addEventListener('input', (e) => { detectarRede(e.target.value); atualizarVisibilidade(); });
-        $('formatSelect').addEventListener('change', atualizarVisibilidade);
-
-        const MSG_ERRO = {
-            'youtube.login': '🍪 O YouTube exigiu login desse servidor.',
-            'content.video.private': '🔒 Esse vídeo é privado.',
-            'content.video.age': '🔞 Vídeo com restrição de idade.',
-            'content.video.live': '🔴 É uma LIVE — não é possível baixar.',
-            'content.video.region': '🌍 Vídeo bloqueado na região do servidor.',
-            'content.video.unavailable': '❓ Vídeo indisponível ou removido.',
-            'content.too_long': '⏳ Vídeo longo demais (máx. 3 horas).',
-            'link.unsupported': '🔗 Esse tipo de link não é suportado.',
-            'link.invalid': '🔗 Link inválido.',
-            'fetch.empty': '🕳️ O motor não encontrou mídia nesse link.',
-            'fetch.fail': '📡 Falha ao buscar a mídia.',
-            'fetch.rate': '⏱️ Servidor ocupado, tente novamente em 1 min.'
-        };
-
-        function msgAmigavel(code) { return MSG_ERRO[code] || ('⚠️ ' + code); }
-
-        function formatBytes(b) {
-            if (!b && b !== 0) return '';
-            const u = ['B', 'KB', 'MB', 'GB']; let i = 0, n = b;
-            while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
-            return n.toFixed(i ? 1 : 0) + ' ' + u[i];
-        }
-
-        function mostrarProgresso() { $('progresso').hidden = false; $('barraProg').classList.add('indeterminada'); $('barraProg').style.width = ''; $('progTexto').textContent = '⏳ Baixando... 0 B'; }
-        function atualizarProgresso(bytes) { $('progTexto').textContent = '⏳ Baixando... ' + formatBytes(bytes); }
-        function esconderProgresso() { $('progresso').hidden = true; $('barraProg').classList.remove('indeterminada'); }
-
-        async function lerComProgresso(response) {
-            const total = parseInt(response.headers.get('Content-Length') || '0', 10);
-            if (!response.body) return await response.blob();
-            const reader = response.body.getReader();
-            const chunks = []; let recebido = 0;
-            if (total > 0) $('barraProg').classList.remove('indeterminada');
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                chunks.push(value); recebido += value.length;
-                if (total > 0) $('barraProg').style.width = Math.min(100, (recebido / total) * 100) + '%';
-                atualizarProgresso(recebido);
-            }
-            return new Blob(chunks, { type: response.headers.get('Content-Type') || undefined });
-        }
-
-        let ultimoBlob = null, ultimoNome = '';
-
-        async function baixarArquivo(url, nomeFallback, opts = {}) {
-            mostrarProgresso();
-            const resp = await fetch(url);
-            if (!resp.ok) { esconderProgresso(); throw new Error('HTTP ' + resp.status); }
-            const blob = await lerComProgresso(resp);
-            esconderProgresso();
-            if (opts.expectImage && !blob.type.startsWith('image/')) throw new Error('NOT_IMAGE');
-            if (opts.minSize && blob.size < opts.minSize) throw new Error('TOO_SMALL');
-            let nome = nomeFallback || ('baixador_universal_' + Date.now() + '.mp4');
-            if (opts.expectImage && !/\.(jpe?g|png|webp)$/i.test(nome)) {
-                nome = nome.replace(/\.[a-z0-9]+$/i, '') + '.jpg';
-            }
-            const downloadUrl = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = downloadUrl; a.download = nome;
-            document.body.appendChild(a); a.click(); a.remove();
-            window.URL.revokeObjectURL(downloadUrl);
-            ultimoBlob = blob; ultimoNome = nome;
-            $('acoes').hidden = false;
-            total++; localStorage.setItem('totalDownloads', total); atualizarContagem();
-            salvarHist({ rede: '⬇️ Download', nome: nome, tamanho: formatBytes(blob.size), quando: new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) });
-            if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
-            const card = $('card'); card.classList.remove('pulse'); void card.offsetWidth; card.classList.add('pulse');
-            return blob;
-        }
-
-        const EXT_PICKER = { photo: 'jpg', video: 'mp4', gif: 'gif' };
-
-        function mostrarPicker(data) {
-            const box = $('pickerBox'); box.innerHTML = ''; box.hidden = false;
-            $('status').innerHTML = '🖼️ Esse post tem <strong>' + data.picker.length + ' mídias</strong>. Toque na que quiser baixar:';
-            $('status').style.color = '#00e68a';
-            data.picker.forEach((item, i) => {
-                const b = document.createElement('button');
-                b.className = 'pick-item';
-                const rotulo = (item.type === 'photo' ? '📷 ' : item.type === 'gif' ? '🌀 ' : '🎬 ') + (i + 1);
-                b.innerHTML = (item.thumb ? '<img src="' + item.thumb + '" alt="">' : '') + '<span>' + rotulo + '</span>';
-                b.onclick = async () => {
-                    try { await baixarArquivo(item.url, 'midia_' + (i + 1) + '.' + (EXT_PICKER[item.type] || 'mp4')); }
-                    catch (e) { $('status').innerHTML = '❌ Falha ao baixar: ' + e.message; $('status').style.color = '#ff6b6b'; esconderProgresso(); }
-                };
-                box.appendChild(b);
-            });
-            if (data.audio) {
-                const ba = document.createElement('button');
-                ba.className = 'pick-audio';
-                ba.textContent = '🎵 Baixar o áudio da slideshow';
-                ba.onclick = async () => {
-                    try { await baixarArquivo(data.audio, (data.audioFilename || 'audio_slideshow') + '.mp3'); }
-                    catch (e) { $('status').innerHTML = '❌ Falha ao baixar o áudio: ' + e.message; $('status').style.color = '#ff6b6b'; esconderProgresso(); }
-                };
-                box.appendChild(ba);
-            }
-        }
-
-        $('btnColar').onclick = async () => {
-            try {
-                const t = await navigator.clipboard.readText();
-                $('linkInput').value = t; detectarRede(t); atualizarVisibilidade();
-            } catch {
-                $('status').innerHTML = '⚠️ Não consegui ler a área de transferência. Cole manualmente.';
-                $('status').style.color = '#ffd54f';
-            }
-        };
-
-        const overlay = $('modalOverlay');
-        function abrirAjuda() { overlay.classList.add('aberto'); }
-        function fecharAjuda() { overlay.classList.remove('aberto'); localStorage.setItem('viuAjuda', '1'); }
-        $('btnInfo').onclick = abrirAjuda;
-        $('btnFechar').onclick = fecharAjuda;
-        overlay.onclick = (e) => { if (e.target === overlay) fecharAjuda(); };
-        if (!localStorage.getItem('viuAjuda')) abrirAjuda();
-
-        $('btnDivulgar').onclick = async () => {
-            const dados = {
-                title: 'Baixador Universal',
-                text: '⚡ Baixador Universal — baixe vídeos, áudios e fotos das redes sociais sem anúncios. Desenvolvido por OCruel!',
-                url: 'https://jaeloliveira18-ai.github.io/baixador-universal/'
-            };
-            if (navigator.share) { try { await navigator.share(dados); } catch {} }
-            else window.open('https://wa.me/?text=' + encodeURIComponent(dados.text + ' ' + dados.url), '_blank');
-        };
-
-        const histOverlay = $('histOverlay');
-        function lerHist() { try { return JSON.parse(localStorage.getItem('historico') || '[]'); } catch { return []; } }
-        function salvarHist(item) { const h = lerHist(); h.unshift(item); localStorage.setItem('historico', JSON.stringify(h.slice(0, 10))); }
-        function renderHist() {
-            const h = lerHist();
-            if (!h.length) { $('histLista').innerHTML = '<p class="hist-vazio">Nenhum download ainda. 🌱</p>'; return; }
-            $('histLista').innerHTML = h.map(i => '<div class="hist-item"><div><div class="hn">' + i.rede + '</div><div class="hm">' + i.nome + '</div></div><div class="hm" style="text-align:right">' + i.tamanho + '<br>' + i.quando + '</div></div>').join('');
-        }
-        $('btnHistorico').onclick = () => { renderHist(); histOverlay.classList.add('aberto'); };
-        $('btnHistFechar').onclick = () => histOverlay.classList.remove('aberto');
-        histOverlay.onclick = (e) => { if (e.target === histOverlay) histOverlay.classList.remove('aberto'); };
-        $('btnHistLimpar').onclick = () => { localStorage.removeItem('historico'); renderHist(); };
-
-        $('customInstance').addEventListener('change', (e) => localStorage.setItem('cobaltInstance', e.target.value.trim()));
-        $('customInstance').value = localStorage.getItem('cobaltInstance') || '';
-        let total = parseInt(localStorage.getItem('totalDownloads') || '0', 10);
-        function atualizarContagem() { $('contagem').textContent = total + (total === 1 ? ' download' : ' downloads'); }
-        atualizarContagem();
-
-        $('btnCompartilhar').onclick = async () => {
-            if (!ultimoBlob) return;
-            const file = new File([ultimoBlob], ultimoNome, { type: ultimoBlob.type || 'video/mp4' });
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                try { await navigator.share({ files: [file], title: 'Baixador Universal' }); $('status').innerHTML = '📤 Compartilhado!'; $('status').style.color = '#00e68a'; } catch {}
-            } else {
-                $('status').innerHTML = '📁 Arquivo salvo na pasta Downloads.';
-                $('status').style.color = '#ffd54f';
-            }
-        };
-
-        async function baixarMidia() {
-            let link = $('linkInput').value.trim();
-            if (link && !/^https?:\/\//i.test(link)) { link = 'https://' + link; $('linkInput').value = link; }
-            const format = $('formatSelect').value;
-            const statusDiv = $('status');
-            const btn = $('btnBaixar');
-            const btnOriginal = btn.innerHTML;
-            const custom = localStorage.getItem('cobaltInstance') || '';
-            $('acoes').hidden = true; $('pickerBox').hidden = true; esconderProgresso();
-            if (!link) { statusDiv.innerHTML = '⚠️ Cole um link válido!'; statusDiv.style.color = '#ff6b6b'; return; }
-            btn.disabled = true; btn.innerHTML = '⏳ Processando...';
-            statusDiv.style.color = '#8fa89c';
-            const erros = [];
-            let tratado = false;
-
-            if (format === 'photo' && ehYouTube(link)) {
-                const id = ytId(link);
-                if (id) {
-                    statusDiv.innerHTML = '🖼️ Baixando a capa do YouTube...';
-                    let okCapa = false;
-                    const capas = [
-                        'https://i.ytimg.com/vi/' + id + '/maxresdefault.jpg',
-                        'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg'
-                    ];
-                    for (const c of capas) {
-                        try {
-                            await baixarArquivo(c, 'capa_youtube_' + id + '.jpg', { expectImage: true, minSize: c.includes('maxres') ? 9000 : 0 });
-                            okCapa = true; break;
-                        } catch (e) { if (e.message === 'NOT_IMAGE' || e.message === 'TOO_SMALL') continue; }
-                    }
-                    if (okCapa) {
-                        tratado = true;
-                    } else {
-                        window.open(capas[1], '_blank');
-                        statusDiv.innerHTML = '🖼️ A capa abriu em outra aba.';
-                        statusDiv.style.color = '#ffd54f';
-                        tratado = true;
-                    }
-                }
-            }
-
-            if (!tratado) {
-                const servidores = [custom, 'https://cobalt-tools-production-4fb0.up.railway.app/', 'https://cobaltapi.cjs.nz/'].filter(Boolean);
-                for (let apiUrl of servidores) {
-                    let host; try { host = new URL(apiUrl).host; } catch { host = apiUrl; }
-                    statusDiv.innerHTML = '🔄 Tentando servidor: ' + host + '...';
-                    try {
-                        const response = await fetch(apiUrl, {
-                            method: 'POST',
-                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                url: link,
-                                downloadMode: format === 'audio' ? 'audio' : 'auto',
-                                audioFormat: 'mp3',
-                                audioBitrate: $('bitrateSelect').value,
-                                videoQuality: $('qualitySelect').value,
-                                youtubeVideoCodec: $('ytCodec').value,
-                                youtubeDubLang: $('ytDub').value || undefined,
-                                subtitleLang: $('ytSub').value || undefined,
-                                youtubeBetterAudio: format === 'audio',
-                                alwaysProxy: $('chkPrivacidade').checked,
-                                filenameStyle: 'pretty'
-                            })
-                        });
-                        let data = null; try { data = await response.json(); } catch {}
-                        if (response.status === 429) { erros.push(host + ': 🚦 servidor ocupado'); continue; }
-                        if (!response.ok) { erros.push(host + ': ' + msgAmigavel(data?.error?.code || ('HTTP ' + response.status))); continue; }
-                        if (data.status === 'error') { erros.push(host + ': ' + msgAmigavel(data?.error?.code)); continue; }
-
-                        if (format === 'photo') {
-                            if (data.status === 'picker' && data.picker) {
-                                const fotos = data.picker.filter(i => i.type === 'photo');
-                                if (!fotos.length) { erros.push(host + ': esse post só tem vídeos'); continue; }
-                                if (fotos.length === 1) {
-                                    await baixarArquivo(fotos[0].url, 'foto_1.jpg', { expectImage: true });
-                                } else {
-                                    mostrarPicker({ picker: fotos });
-                                }
-                                tratado = true; break;
-                            }
-                            if (data.url) {
-                                try {
-                                    await baixarArquivo(data.url, data.filename, { expectImage: true });
-                                    tratado = true; break;
-                                } catch (e) {
-                                    if (e.message === 'NOT_IMAGE') { erros.push(host + ': esse link é um vídeo'); continue; }
-                                    throw e;
-                                }
-                            }
-                            erros.push(host + ': nenhuma foto encontrada'); continue;
-                        }
-
-                        if (data.status === 'picker' && data.picker && data.picker.length) { mostrarPicker(data); tratado = true; break; }
-                        if (!data.url) { erros.push(host + ': ' + msgAmigavel('fetch.empty')); continue; }
-                        statusDiv.innerHTML = '✅ Mídia encontrada! Baixando...';
-                        statusDiv.style.color = '#00e68a';
-                        try {
-                            await baixarArquivo(data.url, data.filename);
-                        } catch (e) {
-                            window.open(data.url, '_blank'); esconderProgresso();
-                        }
-                        setTimeout(() => { $('linkInput').value = ''; $('chipRede').hidden = true; }, 2000);
-                        tratado = true;
-                        break;
-                    } catch (error) {
-                        erros.push(host + ': offline ou bloqueado');
-                        console.error(error);
-                    }
-                }
-            }
-
-            if (!tratado) {
-                esconderProgresso();
-                statusDiv.style.color = '#ff6b6b';
-                statusDiv.innerHTML = '❌ Nenhum servidor funcionou:<br>• ' + erros.join('<br>• ');
-            }
-            btn.disabled = false; btn.innerHTML = btnOriginal;
-        }
-    </script>
+      btn.disabled = false;
+      btn.innerText = "Baixar Agora";
+    }
+  </script>
 </body>
 </html>
