@@ -18,7 +18,6 @@
             --texto: #edf7f2;
             --suave: #8fa89c;
             --borda: rgba(255, 255, 255, 0.08);
-            --card: rgba(255, 255, 255, 0.04);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,7 +35,6 @@
             overflow-x: hidden;
         }
 
-        /* Fundo com gradiente sutil */
         body::before {
             content: "";
             position: fixed;
@@ -79,7 +77,6 @@
             100% { box-shadow: 0 0 0 32px transparent; }
         }
 
-        /* Header */
         .topo {
             display: flex;
             align-items: center;
@@ -166,7 +163,6 @@
             box-shadow: 0 0 18px rgba(0, 230, 138, 0.2);
         }
 
-        /* Campos */
         .campo-label {
             display: block;
             text-align: left;
@@ -231,7 +227,6 @@
             color: #5a6e66;
         }
 
-        /* Chip de rede */
         .chip-rede {
             margin-top: 10px;
             font-size: 11.5px;
@@ -266,7 +261,6 @@
             margin-top: 9px;
         }
 
-        /* Avançado */
         details.avancado {
             margin-top: 18px;
             padding: 12px 16px;
@@ -296,7 +290,6 @@
             color: var(--suave);
         }
 
-        /* Botão principal */
         #btnBaixar {
             margin-top: 24px;
             width: 100%;
@@ -334,7 +327,6 @@
             box-shadow: none;
         }
 
-        /* Status e progresso */
         #status {
             margin-top: 18px;
             min-height: 22px;
@@ -381,7 +373,6 @@
             margin-top: 6px;
         }
 
-        /* Picker */
         #pickerBox {
             margin-top: 16px;
             display: grid;
@@ -461,7 +452,6 @@
             background: rgba(0, 230, 138, 0.18);
         }
 
-        /* Footer */
         .watermark {
             position: relative;
             z-index: 1;
@@ -480,7 +470,6 @@
             font-weight: 800;
         }
 
-        /* Modais */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -761,7 +750,6 @@
 
     <footer class="watermark">⚡ Desenvolvido por <strong>OCruel</strong> • <span id="contagem">0 downloads</span></footer>
 
-    <!-- Modal Ajuda -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
             <button class="modal-fechar" id="btnFechar" aria-label="Fechar">✕</button>
@@ -770,22 +758,21 @@
             <h3>📋 Passo a passo</h3>
             <ol class="passos">
                 <li>Abra a rede social e ache o vídeo ou foto.</li>
-                <li>Toque em <strong>Compartilhar → Copiar link</strong> (ou compartilhe direto pro app).</li>
+                <li>Toque em <strong>Compartilhar → Copiar link</strong>.</li>
                 <li>Cole no campo ou toque em 📋.</li>
                 <li>Escolha o formato: Vídeo, Áudio ou Imagem.</li>
-                <li>Toque em <strong>"Baixar agora"</strong> e acompanhe a barra de progresso.</li>
+                <li>Toque em <strong>"Baixar agora"</strong>.</li>
             </ol>
             <h3>✅ Redes suportadas</h3>
             <div class="chips">
-                <span>Instagram</span><span>TikTok</span><span>X / Twitter</span><span>Facebook</span><span>Reddit</span><span>Pinterest</span><span>Snapchat</span><span>SoundCloud</span><span>Vimeo</span><span>Dailymotion</span><span>Bluesky</span><span>Twitch (clips)</span><span>Streamable</span><span>Tumblr</span><span>VK</span><span>Rutube</span><span>Bilibili</span><span>Loom</span><span>Newgrounds</span><span>OK</span>
+                <span>Instagram</span><span>TikTok</span><span>X / Twitter</span><span>Facebook</span><span>Reddit</span><span>Pinterest</span><span>Snapchat</span><span>SoundCloud</span><span>Vimeo</span><span>Dailymotion</span><span>Bluesky</span><span>Twitch</span><span>Tumblr</span><span>VK</span><span>Bilibili</span>
             </div>
-            <p class="modal-nota">🍪 YouTube: autenticação em configuração (em breve).<br>❌ Threads e Kwai: não suportadas pelo motor.<br>📘 Facebook: só vídeos e Reels públicos — Stories não.</p>
+            <p class="modal-nota">🍪 YouTube: autenticação em breve.<br>❌ Threads e Kwai: não suportadas.</p>
             <button class="btn-verde" id="btnDivulgar">📣 Divulgar o Baixador Universal</button>
             <p class="modal-credito">⚡ Desenvolvido por OCruel</p>
         </div>
     </div>
 
-    <!-- Modal Histórico -->
     <div class="modal-overlay" id="histOverlay">
         <div class="modal">
             <button class="modal-fechar" id="btnHistFechar" aria-label="Fechar">✕</button>
@@ -798,14 +785,16 @@
 
     <script>
         const $ = (id) => document.getElementById(id);
-        // ----- PWA -----
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
         }
+
         let deferredPrompt = null;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault(); deferredPrompt = e; $('btnInstalar').hidden = false;
         });
+
         const ehIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
         const btnInstalar = $('btnInstalar');
         if (ehIOS) {
@@ -819,7 +808,7 @@
                 deferredPrompt = null; btnInstalar.hidden = true;
             };
         }
-        // ----- Share Target -----
+
         (function () {
             const p = new URLSearchParams(location.search);
             const bruto = p.get('url') || p.get('text') || p.get('title') || '';
@@ -830,7 +819,7 @@
             history.replaceState({}, '', location.pathname);
             setTimeout(() => { detectarRede(valor); atualizarVisibilidade(); }, 100);
         })();
-        // ----- Detetor de rede -----
+
         const MAPA = [
             ['instagram.com', '📸 Instagram', 'ok'], ['tiktok.com', '🎵 TikTok', 'ok'],
             ['twitter.com', '🐦 X / Twitter', 'ok'], ['x.com', '🐦 X / Twitter', 'ok'],
@@ -840,14 +829,16 @@
             ['threads.net', '🧵 Threads', 'nao'], ['threads.com', '🧵 Threads', 'nao'],
             ['kwai.com', '❌ Kwai', 'nao'], ['youtube.com', '🍪 YouTube', 'breve'], ['youtu.be', '🍪 YouTube', 'breve']
         ];
+
         function hostDe(u) {
             try { if (!/^https?:/i.test(u)) u = 'https://' + u; return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; }
         }
+
         function detectarRede(url) {
             const chip = $('chipRede'); const u = url.toLowerCase();
             if (u.includes('facebook.com/stories') || u.includes('facebook.com/story')) {
                 chip.hidden = false; chip.className = 'chip-rede nao';
-                chip.textContent = '📘 Facebook Stories — não suportado (só vídeos e Reels) ❌'; return;
+                chip.textContent = '📘 Facebook Stories — não suportado ❌'; return;
             }
             const h = hostDe(url);
             if (!h) { chip.hidden = true; return; }
@@ -858,10 +849,12 @@
                 : achado[2] === 'breve' ? achado[1] + ' — em breve (autenticação) 🍪'
                 : achado[1] + ' — não suportada ❌';
         }
+
         function ehYouTube(url) {
             const h = hostDe(url);
             return h === 'youtube.com' || h.endsWith('.youtube.com') || h === 'youtu.be';
         }
+
         function ytId(link) {
             try {
                 const u = new URL(link);
@@ -872,47 +865,45 @@
             } catch {}
             return null;
         }
+
         function atualizarVisibilidade() {
             const formato = $('formatSelect').value; const link = $('linkInput').value;
             $('qualityWrap').hidden = (formato !== 'video');
             $('bitWrap').hidden = (formato !== 'audio');
             $('ytWrap').hidden = !(formato === 'video' && ehYouTube(link));
         }
+
         $('linkInput').addEventListener('input', (e) => { detectarRede(e.target.value); atualizarVisibilidade(); });
         $('formatSelect').addEventListener('change', atualizarVisibilidade);
-        // ----- Tradutor de erros -----
+
         const MSG_ERRO = {
-            'youtube.login': '🍪 O YouTube exigiu login desse servidor (a Fase C dos cookies resolve!).',
+            'youtube.login': '🍪 O YouTube exigiu login desse servidor.',
             'content.video.private': '🔒 Esse vídeo é privado.',
-            'content.video.age': '🔞 Vídeo com restrição de idade que o servidor não consegue verificar.',
-            'content.video.live': '🔴 É uma LIVE — o motor não baixa transmissões ao vivo.',
+            'content.video.age': '🔞 Vídeo com restrição de idade.',
+            'content.video.live': '🔴 É uma LIVE — não é possível baixar.',
             'content.video.region': '🌍 Vídeo bloqueado na região do servidor.',
             'content.video.unavailable': '❓ Vídeo indisponível ou removido.',
-            'content.too_long': '⏳ Vídeo longo demais para o limite do servidor (máx. 3 horas).',
-            'link.unsupported': '🔗 Esse TIPO de link não é suportado (ex.: Stories do Facebook).',
-            'link.invalid': '🔗 Link inválido ou de rede desconhecida.',
-            'service.disabled': '🚫 Essa rede está desativada no servidor.',
-            'service.unsupported': '🚫 Rede não suportada pelo motor.',
-            'service.audio_not_supported': '🎵 Essa rede não permite extrair só o áudio.',
-            'youtube.drm': '🛡️ Vídeo com proteção DRM — não dá pra baixar.',
-            'youtube.no_matching_format': '🎚️ Nenhuma qualidade/codec disponível pra esse vídeo.',
-            'youtube.no_session_tokens': '🍪 Servidor sem sessão do YouTube configurada.',
-            'fetch.fail': '📡 Falha ao buscar a mídia. Tente de novo.',
-            'fetch.rate': '⏱️ O servidor atingiu o limite do YouTube agora; espere ~1 min.',
-            'fetch.critical': '💥 Erro crítico no motor de extração.',
-            'fetch.empty': '🕳️ O motor não encontrou mídia nesse link.'
+            'content.too_long': '⏳ Vídeo longo demais (máx. 3 horas).',
+            'link.unsupported': '🔗 Esse tipo de link não é suportado.',
+            'link.invalid': '🔗 Link inválido.',
+            'fetch.empty': '🕳️ O motor não encontrou mídia nesse link.',
+            'fetch.fail': '📡 Falha ao buscar a mídia.',
+            'fetch.rate': '⏱️ Servidor ocupado, tente novamente em 1 min.'
         };
+
         function msgAmigavel(code) { return MSG_ERRO[code] || ('⚠️ ' + code); }
-        // ----- Barra de progresso -----
+
         function formatBytes(b) {
             if (!b && b !== 0) return '';
             const u = ['B', 'KB', 'MB', 'GB']; let i = 0, n = b;
             while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
             return n.toFixed(i ? 1 : 0) + ' ' + u[i];
         }
+
         function mostrarProgresso() { $('progresso').hidden = false; $('barraProg').classList.add('indeterminada'); $('barraProg').style.width = ''; $('progTexto').textContent = '⏳ Baixando... 0 B'; }
         function atualizarProgresso(bytes) { $('progTexto').textContent = '⏳ Baixando... ' + formatBytes(bytes); }
         function esconderProgresso() { $('progresso').hidden = true; $('barraProg').classList.remove('indeterminada'); }
+
         async function lerComProgresso(response) {
             const total = parseInt(response.headers.get('Content-Length') || '0', 10);
             if (!response.body) return await response.blob();
@@ -928,8 +919,9 @@
             }
             return new Blob(chunks, { type: response.headers.get('Content-Type') || undefined });
         }
-        // ----- Download de arquivo -----
+
         let ultimoBlob = null, ultimoNome = '';
+
         async function baixarArquivo(url, nomeFallback, opts = {}) {
             mostrarProgresso();
             const resp = await fetch(url);
@@ -955,8 +947,9 @@
             const card = $('card'); card.classList.remove('pulse'); void card.offsetWidth; card.classList.add('pulse');
             return blob;
         }
-        // ----- Carrossel (picker) -----
+
         const EXT_PICKER = { photo: 'jpg', video: 'mp4', gif: 'gif' };
+
         function mostrarPicker(data) {
             const box = $('pickerBox'); box.innerHTML = ''; box.hidden = false;
             $('status').innerHTML = '🖼️ Esse post tem <strong>' + data.picker.length + ' mídias</strong>. Toque na que quiser baixar:';
@@ -968,7 +961,7 @@
                 b.innerHTML = (item.thumb ? '<img src="' + item.thumb + '" alt="">' : '') + '<span>' + rotulo + '</span>';
                 b.onclick = async () => {
                     try { await baixarArquivo(item.url, 'midia_' + (i + 1) + '.' + (EXT_PICKER[item.type] || 'mp4')); }
-                    catch (e) { $('status').innerHTML = '❌ Falha ao baixar essa mídia: ' + e.message; $('status').style.color = '#ff6b6b'; esconderProgresso(); }
+                    catch (e) { $('status').innerHTML = '❌ Falha ao baixar: ' + e.message; $('status').style.color = '#ff6b6b'; esconderProgresso(); }
                 };
                 box.appendChild(b);
             });
@@ -983,17 +976,17 @@
                 box.appendChild(ba);
             }
         }
-        // ----- Botão colar -----
+
         $('btnColar').onclick = async () => {
             try {
                 const t = await navigator.clipboard.readText();
                 $('linkInput').value = t; detectarRede(t); atualizarVisibilidade();
             } catch {
-                $('status').innerHTML = '⚠️ Não consegui ler a área de transferência. Cole manualmente (Ctrl+V).';
+                $('status').innerHTML = '⚠️ Não consegui ler a área de transferência. Cole manualmente.';
                 $('status').style.color = '#ffd54f';
             }
         };
-        // ----- Modais -----
+
         const overlay = $('modalOverlay');
         function abrirAjuda() { overlay.classList.add('aberto'); }
         function fecharAjuda() { overlay.classList.remove('aberto'); localStorage.setItem('viuAjuda', '1'); }
@@ -1001,46 +994,47 @@
         $('btnFechar').onclick = fecharAjuda;
         overlay.onclick = (e) => { if (e.target === overlay) fecharAjuda(); };
         if (!localStorage.getItem('viuAjuda')) abrirAjuda();
+
         $('btnDivulgar').onclick = async () => {
             const dados = {
                 title: 'Baixador Universal',
-                text: '⚡ Baixador Universal — baixe vídeos, áudios e fotos das redes sociais sem anúncios, direto no celular. Desenvolvido por OCruel!',
+                text: '⚡ Baixador Universal — baixe vídeos, áudios e fotos das redes sociais sem anúncios. Desenvolvido por OCruel!',
                 url: 'https://jaeloliveira18-ai.github.io/baixador-universal/'
             };
             if (navigator.share) { try { await navigator.share(dados); } catch {} }
             else window.open('https://wa.me/?text=' + encodeURIComponent(dados.text + ' ' + dados.url), '_blank');
         };
-        // ----- Histórico -----
+
         const histOverlay = $('histOverlay');
         function lerHist() { try { return JSON.parse(localStorage.getItem('historico') || '[]'); } catch { return []; } }
         function salvarHist(item) { const h = lerHist(); h.unshift(item); localStorage.setItem('historico', JSON.stringify(h.slice(0, 10))); }
         function renderHist() {
             const h = lerHist();
-            if (!h.length) { $('histLista').innerHTML = '<p class="hist-vazio">Nenhum download ainda. Seu histórico aparece aqui. 🌱</p>'; return; }
+            if (!h.length) { $('histLista').innerHTML = '<p class="hist-vazio">Nenhum download ainda. 🌱</p>'; return; }
             $('histLista').innerHTML = h.map(i => '<div class="hist-item"><div><div class="hn">' + i.rede + '</div><div class="hm">' + i.nome + '</div></div><div class="hm" style="text-align:right">' + i.tamanho + '<br>' + i.quando + '</div></div>').join('');
         }
         $('btnHistorico').onclick = () => { renderHist(); histOverlay.classList.add('aberto'); };
         $('btnHistFechar').onclick = () => histOverlay.classList.remove('aberto');
         histOverlay.onclick = (e) => { if (e.target === histOverlay) histOverlay.classList.remove('aberto'); };
         $('btnHistLimpar').onclick = () => { localStorage.removeItem('historico'); renderHist(); };
-        // ----- Instância + contador -----
+
         $('customInstance').addEventListener('change', (e) => localStorage.setItem('cobaltInstance', e.target.value.trim()));
         $('customInstance').value = localStorage.getItem('cobaltInstance') || '';
         let total = parseInt(localStorage.getItem('totalDownloads') || '0', 10);
         function atualizarContagem() { $('contagem').textContent = total + (total === 1 ? ' download' : ' downloads'); }
         atualizarContagem();
-        // ----- Compartilhar arquivo -----
+
         $('btnCompartilhar').onclick = async () => {
             if (!ultimoBlob) return;
             const file = new File([ultimoBlob], ultimoNome, { type: ultimoBlob.type || 'video/mp4' });
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                try { await navigator.share({ files: [file], title: 'Baixador Universal' }); $('status').innerHTML = '📤 Compartilhado com sucesso!'; $('status').style.color = '#00e68a'; } catch {}
+                try { await navigator.share({ files: [file], title: 'Baixador Universal' }); $('status').innerHTML = '📤 Compartilhado!'; $('status').style.color = '#00e68a'; } catch {}
             } else {
-                $('status').innerHTML = '📁 Seu navegador não permite compartilhamento direto: o arquivo está na pasta Downloads.';
+                $('status').innerHTML = '📁 Arquivo salvo na pasta Downloads.';
                 $('status').style.color = '#ffd54f';
             }
         };
-        // ----- Motor de download -----
+
         async function baixarMidia() {
             let link = $('linkInput').value.trim();
             if (link && !/^https?:\/\//i.test(link)) { link = 'https://' + link; $('linkInput').value = link; }
@@ -1050,12 +1044,12 @@
             const btnOriginal = btn.innerHTML;
             const custom = localStorage.getItem('cobaltInstance') || '';
             $('acoes').hidden = true; $('pickerBox').hidden = true; esconderProgresso();
-            if (!link) { statusDiv.innerHTML = '⚠️ Cole um link válido antes de baixar!'; statusDiv.style.color = '#ff6b6b'; return; }
+            if (!link) { statusDiv.innerHTML = '⚠️ Cole um link válido!'; statusDiv.style.color = '#ff6b6b'; return; }
             btn.disabled = true; btn.innerHTML = '⏳ Processando...';
             statusDiv.style.color = '#8fa89c';
             const erros = [];
             let tratado = false;
-            // ----- MODO IMAGEM no YouTube = baixar a CAPA -----
+
             if (format === 'photo' && ehYouTube(link)) {
                 const id = ytId(link);
                 if (id) {
@@ -1075,13 +1069,13 @@
                         tratado = true;
                     } else {
                         window.open(capas[1], '_blank');
-                        statusDiv.innerHTML = '🖼️ A capa abriu em outra aba: toque e segure nela para salvar.';
+                        statusDiv.innerHTML = '🖼️ A capa abriu em outra aba.';
                         statusDiv.style.color = '#ffd54f';
                         tratado = true;
                     }
                 }
             }
-            // ----- Servidores -----
+
             if (!tratado) {
                 const servidores = [custom, 'https://cobalt-tools-production-4fb0.up.railway.app/', 'https://cobaltapi.cjs.nz/'].filter(Boolean);
                 for (let apiUrl of servidores) {
@@ -1106,14 +1100,14 @@
                             })
                         });
                         let data = null; try { data = await response.json(); } catch {}
-                        if (response.status === 429) { erros.push(host + ': 🚦 servidor ocupado, espere ~1 min'); continue; }
+                        if (response.status === 429) { erros.push(host + ': 🚦 servidor ocupado'); continue; }
                         if (!response.ok) { erros.push(host + ': ' + msgAmigavel(data?.error?.code || ('HTTP ' + response.status))); continue; }
                         if (data.status === 'error') { erros.push(host + ': ' + msgAmigavel(data?.error?.code)); continue; }
-                        // ----- MODO IMAGEM -----
+
                         if (format === 'photo') {
                             if (data.status === 'picker' && data.picker) {
                                 const fotos = data.picker.filter(i => i.type === 'photo');
-                                if (!fotos.length) { erros.push(host + ': esse post só tem VÍDEOS, não tem fotos 🎬'); continue; }
+                                if (!fotos.length) { erros.push(host + ': esse post só tem vídeos'); continue; }
                                 if (fotos.length === 1) {
                                     await baixarArquivo(fotos[0].url, 'foto_1.jpg', { expectImage: true });
                                 } else {
@@ -1126,16 +1120,16 @@
                                     await baixarArquivo(data.url, data.filename, { expectImage: true });
                                     tratado = true; break;
                                 } catch (e) {
-                                    if (e.message === 'NOT_IMAGE') { erros.push(host + ': esse link é um VÍDEO, não uma foto — use o formato 🎬 Vídeo'); continue; }
+                                    if (e.message === 'NOT_IMAGE') { erros.push(host + ': esse link é um vídeo'); continue; }
                                     throw e;
                                 }
                             }
-                            erros.push(host + ': nenhuma foto encontrada nesse link'); continue;
+                            erros.push(host + ': nenhuma foto encontrada'); continue;
                         }
-                        // ----- Vídeo / Áudio -----
+
                         if (data.status === 'picker' && data.picker && data.picker.length) { mostrarPicker(data); tratado = true; break; }
                         if (!data.url) { erros.push(host + ': ' + msgAmigavel('fetch.empty')); continue; }
-                        statusDiv.innerHTML = '✅ Mídia encontrada! Baixando arquivo...';
+                        statusDiv.innerHTML = '✅ Mídia encontrada! Baixando...';
                         statusDiv.style.color = '#00e68a';
                         try {
                             await baixarArquivo(data.url, data.filename);
@@ -1146,11 +1140,12 @@
                         tratado = true;
                         break;
                     } catch (error) {
-                        erros.push(host + ': bloqueado por CORS ou offline');
-                        console.error('Falha em ' + host + ':', error);
+                        erros.push(host + ': offline ou bloqueado');
+                        console.error(error);
                     }
                 }
             }
+
             if (!tratado) {
                 esconderProgresso();
                 statusDiv.style.color = '#ff6b6b';
