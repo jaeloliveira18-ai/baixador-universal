@@ -254,35 +254,6 @@
             margin-top: 9px;
         }
 
-        details.avancado {
-            margin-top: 18px;
-            padding: 12px 16px;
-            border: 1px dashed rgba(255,255,255,0.12);
-            border-radius: 16px;
-            background: rgba(255,255,255,0.02);
-        }
-
-        details.avancado summary {
-            cursor: pointer;
-            font-size: 12.5px;
-            color: var(--suave);
-            font-weight: 500;
-        }
-
-        details.avancado input {
-            margin-top: 12px;
-            font-size: 13px;
-        }
-
-        .chk-row {
-            display: flex;
-            gap: 9px;
-            align-items: center;
-            margin-top: 12px;
-            font-size: 12.5px;
-            color: var(--suave);
-        }
-
         #btnBaixar {
             margin-top: 24px;
             width: 100%;
@@ -697,12 +668,6 @@
             </select>
         </div>
 
-        <details class="avancado">
-            <summary>⚙️ Configuração avançada</summary>
-            <input type="url" id="customInstance" placeholder="Sua própria API (opcional): https://sua-api.app/" autocomplete="off">
-            <label class="chk-row"><input type="checkbox" id="chkPrivacidade"> 🔒 Modo privacidade (baixa através do servidor)</label>
-        </details>
-
         <button id="btnBaixar" onclick="baixarMidia()">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
             Baixar agora
@@ -815,8 +780,8 @@
             if (!h) { chip.hidden = true; return; }
             const achado = MAPA.find(([d]) => h === d || h.endsWith('.' + d));
             if (!achado) { chip.hidden = true; return; }
-            chip.hidden = false; chip.className = 'chip-rede ' + achado[2];
-            chip.textContent = achado[2] === 'ok' ? achado + ' — suportada ✅'
+            chip.hidden = false; chip.className = 'chip-rede ' + achado;
+            chip.textContent = achado === 'ok' ? achado + ' — suportada ✅'
                 : achado + ' — não suportada ❌';
         }
 
@@ -975,8 +940,6 @@
         histOverlay.onclick = (e) => { if (e.target === histOverlay) histOverlay.classList.remove('aberto'); };
         $('btnHistLimpar').onclick = () => { localStorage.removeItem('historico'); renderHist(); };
 
-        $('customInstance').addEventListener('change', (e) => localStorage.setItem('cobaltInstance', e.target.value.trim()));
-        $('customInstance').value = localStorage.getItem('cobaltInstance') || '';
         let total = parseInt(localStorage.getItem('totalDownloads') || '0', 10);
         function atualizarContagem() { $('contagem').textContent = total + (total === 1 ? ' download' : ' downloads'); }
         atualizarContagem();
@@ -999,7 +962,6 @@
             const statusDiv = $('status');
             const btn = $('btnBaixar');
             const btnOriginal = btn.innerHTML;
-            const custom = localStorage.getItem('cobaltInstance') || '';
             $('acoes').hidden = true; $('pickerBox').hidden = true; esconderProgresso();
 
             if (!link) { 
@@ -1008,7 +970,6 @@
                 return; 
             }
 
-            // Alerta preventivo para links do YouTube
             if (ehYouTube(link)) {
                 statusDiv.innerHTML = '⚠️ Suporte ao YouTube desativado. Cole links do Instagram, TikTok, X, Facebook, etc.';
                 statusDiv.style.color = '#ffd54f';
@@ -1020,31 +981,42 @@
             const erros = [];
             let tratado = false;
 
+            // Lista com suas duas APIs prioritárias e servidores de contingência
             const servidores = [
-                custom,
+                'https://cobalt-ocruel.onrender.com/',
                 'https://cobalt-tools-production-4fb0.up.railway.app/',
                 'https://cobaltapi.cjs.nz/',
                 'https://co.wuk.sh/api/json',
                 'https://cobalt.qwyku.com/api/json'
-            ].filter(Boolean);
+            ];
+
+            const requestPayload = JSON.stringify({
+                url: link,
+                downloadMode: format === 'audio' ? 'audio' : 'auto',
+                isAudioOnly: format === 'audio',
+                audioFormat: 'mp3',
+                aFormat: 'mp3',
+                audioBitrate: $('bitrateSelect').value,
+                videoQuality: $('qualitySelect').value,
+                filenameStyle: 'pretty'
+            });
 
             for (let apiUrl of servidores) {
                 let host; try { host = new URL(apiUrl).host; } catch { host = apiUrl; }
                 statusDiv.innerHTML = '🔄 Conectando: ' + host + '...';
+
+                // Tolerância de 12 segundos antes de pular para o próximo servidor
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 12000);
+
                 try {
                     const response = await fetch(apiUrl, {
                         method: 'POST',
                         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            url: link,
-                            downloadMode: format === 'audio' ? 'audio' : 'auto',
-                            audioFormat: 'mp3',
-                            audioBitrate: $('bitrateSelect').value,
-                            videoQuality: $('qualitySelect').value,
-                            alwaysProxy: $('chkPrivacidade').checked,
-                            filenameStyle: 'pretty'
-                        })
+                        body: requestPayload,
+                        signal: controller.signal
                     });
+                    clearTimeout(timeoutId);
 
                     let data = null; try { data = await response.json(); } catch {}
                     if (response.status === 429) { erros.push(host + ': 🚦 servidor ocupado'); continue; }
@@ -1076,6 +1048,7 @@
 
                     if (data.status === 'picker' && data.picker && data.picker.length) { mostrarPicker(data); tratado = true; break; }
                     if (!data.url) { erros.push(host + ': ' + msgAmigavel('fetch.empty')); continue; }
+
                     statusDiv.innerHTML = '✅ Mídia encontrada! Baixando...';
                     statusDiv.style.color = '#00e68a';
                     try {
@@ -1087,15 +1060,16 @@
                     tratado = true;
                     break;
                 } catch (error) {
-                    erros.push(host + ': falha de conexão');
-                    console.error(error);
+                    clearTimeout(timeoutId);
+                    erros.push(host + ': indisponível/tempo esgotado');
+                    console.warn('Falha em ' + host + ', alternando para o próximo...');
                 }
             }
 
             if (!tratado) {
                 esconderProgresso();
                 statusDiv.style.color = '#ff6b6b';
-                statusDiv.innerHTML = '❌ Nenhum servidor funcionou:<br>• ' + erros.join('<br>• ');
+                statusDiv.innerHTML = '❌ Falha ao processar download:<br>• ' + erros.join('<br>• ');
             }
             btn.disabled = false; btn.innerHTML = btnOriginal;
         }
