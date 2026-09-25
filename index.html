@@ -178,18 +178,41 @@
         }
 
         #linkInput {
-            padding-right: 54px;
+            padding-right: 88px;
+        }
+
+        #btnLimpar {
+            position: absolute;
+            right: 46px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.07);
+            border: none;
+            border-radius: 10px;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--suave);
+            display: grid;
+            place-items: center;
+            transition: 0.2s;
+        }
+
+        #btnLimpar:hover {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff8a8a;
         }
 
         #btnColar {
             position: absolute;
-            right: 9px;
+            right: 8px;
             top: 50%;
             transform: translateY(-50%);
             background: rgba(255,255,255,0.07);
             border: none;
             border-radius: 11px;
-            padding: 9px 11px;
+            padding: 8px 10px;
             cursor: pointer;
             font-size: 14px;
             transition: 0.2s;
@@ -634,6 +657,7 @@
         <label class="campo-label" for="linkInput">Link do vídeo</label>
         <div class="campo-link">
             <input type="url" id="linkInput" placeholder="Cole aqui o link do vídeo..." autocomplete="off">
+            <button id="btnLimpar" title="Limpar campo" hidden>✕</button>
             <button id="btnColar" title="Colar da área de transferência">📋</button>
         </div>
         <div class="chip-rede" id="chipRede" hidden></div>
@@ -701,7 +725,7 @@
             </ol>
             <h3>✅ Redes suportadas</h3>
             <div class="chips">
-                <span>Instagram</span><span>TikTok</span><span>X / Twitter</span><span>Facebook</span><span>Reddit</span><span>Pinterest</span><span>Snapchat</span><span>SoundCloud</span><span>Vimeo</span><span>Dailymotion</span><span>Bluesky</span><span>Twitch</span><span>Tumblr</span><span>VK</span><span>Bilibili</span>
+                <span>Instagram</span><span>TikTok (Sem marca d'água)</span><span>X / Twitter</span><span>Facebook</span><span>Reddit</span><span>Pinterest</span><span>Snapchat</span><span>SoundCloud</span><span>Vimeo</span><span>Dailymotion</span><span>Bluesky</span><span>Twitch</span><span>Tumblr</span><span>VK</span><span>Bilibili</span>
             </div>
             <p class="modal-nota">⚠️ YouTube, Threads e Kwai não são suportadas.</p>
             <button class="btn-verde" id="btnDivulgar">📣 Divulgar o Baixador Universal</button>
@@ -753,17 +777,25 @@
             const valor = m ? m[0] : bruto;
             $('linkInput').value = valor;
             history.replaceState({}, '', location.pathname);
-            setTimeout(() => { detectarRede(valor); atualizarVisibilidade(); }, 100);
+            setTimeout(() => { detectarRede(valor); atualizarVisibilidade(); atualizarBtnLimpar(); }, 100);
         })();
 
         const MAPA = [
-            ['instagram.com', '📸 Instagram', 'ok'], ['tiktok.com', '🎵 TikTok', 'ok'],
-            ['twitter.com', '🐦 X / Twitter', 'ok'], ['x.com', '🐦 X / Twitter', 'ok'],
-            ['facebook.com', '📘 Facebook', 'ok'], ['fb.watch', '📘 Facebook', 'ok'],
-            ['reddit.com', '👽 Reddit', 'ok'], ['pinterest.com', '📌 Pinterest', 'ok'],
-            ['snapchat.com', '👻 Snapchat', 'ok'], ['soundcloud.com', '🎧 SoundCloud', 'ok'],
-            ['threads.net', '🧵 Threads', 'nao'], ['threads.com', '🧵 Threads', 'nao'],
-            ['kwai.com', '❌ Kwai', 'nao'], ['youtube.com', '🚫 YouTube', 'nao'], ['youtu.be', '🚫 YouTube', 'nao']
+            ['instagram.com', '📸 Instagram', 'ok'], 
+            ['tiktok.com', '🎵 TikTok (Sem marca d\'água)', 'ok'],
+            ['twitter.com', '🐦 X / Twitter', 'ok'], 
+            ['x.com', '🐦 X / Twitter', 'ok'],
+            ['facebook.com', '📘 Facebook', 'ok'], 
+            ['fb.watch', '📘 Facebook', 'ok'],
+            ['reddit.com', '👽 Reddit', 'ok'], 
+            ['pinterest.com', '📌 Pinterest', 'ok'],
+            ['snapchat.com', '👻 Snapchat', 'ok'], 
+            ['soundcloud.com', '🎧 SoundCloud', 'ok'],
+            ['threads.net', '🧵 Threads', 'nao'], 
+            ['threads.com', '🧵 Threads', 'nao'],
+            ['kwai.com', '❌ Kwai', 'nao'], 
+            ['youtube.com', '🚫 YouTube', 'nao'], 
+            ['youtu.be', '🚫 YouTube', 'nao']
         ];
 
         function hostDe(u) {
@@ -778,6 +810,12 @@
             }
             const h = hostDe(url);
             if (!h) { chip.hidden = true; return; }
+
+            // Seleção inteligente de formato
+            if (h.includes('soundcloud.com')) {
+                $('formatSelect').value = 'audio';
+            }
+
             const achado = MAPA.find(([d]) => h === d || h.endsWith('.' + d));
             if (!achado) { chip.hidden = true; return; }
             chip.hidden = false; chip.className = 'chip-rede ' + achado;
@@ -796,8 +834,24 @@
             $('bitWrap').hidden = (formato !== 'audio');
         }
 
-        $('linkInput').addEventListener('input', (e) => { detectarRede(e.target.value); atualizarVisibilidade(); });
+        function atualizarBtnLimpar() {
+            $('btnLimpar').hidden = !$('linkInput').value.trim();
+        }
+
+        $('linkInput').addEventListener('input', (e) => { 
+            detectarRede(e.target.value); 
+            atualizarVisibilidade(); 
+            atualizarBtnLimpar();
+        });
         $('formatSelect').addEventListener('change', atualizarVisibilidade);
+
+        $('btnLimpar').onclick = () => {
+            $('linkInput').value = '';
+            $('chipRede').hidden = true;
+            atualizarBtnLimpar();
+            atualizarVisibilidade();
+            $('linkInput').focus();
+        };
 
         const MSG_ERRO = {
             'content.video.private': '🔒 Esse vídeo é privado.',
@@ -902,7 +956,10 @@
         $('btnColar').onclick = async () => {
             try {
                 const t = await navigator.clipboard.readText();
-                $('linkInput').value = t; detectarRede(t); atualizarVisibilidade();
+                $('linkInput').value = t; 
+                detectarRede(t); 
+                atualizarVisibilidade();
+                atualizarBtnLimpar();
             } catch {
                 $('status').innerHTML = '⚠️ Não consegui ler a área de transferência. Cole manualmente.';
                 $('status').style.color = '#ffd54f';
@@ -981,7 +1038,6 @@
             const erros = [];
             let tratado = false;
 
-            // Lista com suas duas APIs prioritárias e servidores de contingência
             const servidores = [
                 'https://cobalt-ocruel.onrender.com/',
                 'https://cobalt-tools-production-4fb0.up.railway.app/',
@@ -1005,9 +1061,19 @@
                 let host; try { host = new URL(apiUrl).host; } catch { host = apiUrl; }
                 statusDiv.innerHTML = '🔄 Conectando: ' + host + '...';
 
-                // Tolerância de 12 segundos antes de pular para o próximo servidor
+                // Tolerância maior para o Render acordar no primeiro uso
+                const tempoLimite = apiUrl.includes('onrender.com') ? 35000 : 12000;
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 12000);
+                const timeoutId = setTimeout(() => controller.abort(), tempoLimite);
+
+                // Aviso automático caso o Render demore mais de 3 segundos para responder
+                let avisoAcordando = null;
+                if (apiUrl.includes('onrender.com')) {
+                    avisoAcordando = setTimeout(() => {
+                        statusDiv.innerHTML = '⏳ O servidor está acordando... (no 1º acesso pode levar até 30s)';
+                        statusDiv.style.color = '#ffd54f';
+                    }, 3000);
+                }
 
                 try {
                     const response = await fetch(apiUrl, {
@@ -1017,6 +1083,7 @@
                         signal: controller.signal
                     });
                     clearTimeout(timeoutId);
+                    if (avisoAcordando) clearTimeout(avisoAcordando);
 
                     let data = null; try { data = await response.json(); } catch {}
                     if (response.status === 429) { erros.push(host + ': 🚦 servidor ocupado'); continue; }
@@ -1056,11 +1123,16 @@
                     } catch (e) {
                         window.location.href = data.url; esconderProgresso();
                     }
-                    setTimeout(() => { $('linkInput').value = ''; $('chipRede').hidden = true; }, 2000);
+                    setTimeout(() => { 
+                        $('linkInput').value = ''; 
+                        $('chipRede').hidden = true; 
+                        atualizarBtnLimpar();
+                    }, 2000);
                     tratado = true;
                     break;
                 } catch (error) {
                     clearTimeout(timeoutId);
+                    if (avisoAcordando) clearTimeout(avisoAcordando);
                     erros.push(host + ': indisponível/tempo esgotado');
                     console.warn('Falha em ' + host + ', alternando para o próximo...');
                 }
