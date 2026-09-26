@@ -811,14 +811,15 @@
             const h = hostDe(url);
             if (!h) { chip.hidden = true; return; }
 
-            // Seleção inteligente de formato
+            // Seleção automática para SoundCloud
             if (h.includes('soundcloud.com')) {
                 $('formatSelect').value = 'audio';
             }
 
             const achado = MAPA.find(([d]) => h === d || h.endsWith('.' + d));
             if (!achado) { chip.hidden = true; return; }
-            chip.hidden = false; chip.className = 'chip-rede ' + achado;
+            chip.hidden = false; 
+            chip.className = 'chip-rede ' + achado;
             chip.textContent = achado === 'ok' ? achado + ' — suportada ✅'
                 : achado + ' — não suportada ❌';
         }
@@ -862,7 +863,7 @@
             'content.too_long': '⏳ Vídeo longo demais (máx. 3 horas).',
             'link.unsupported': '🔗 Esse tipo de link não é suportado.',
             'link.invalid': '🔗 Link inválido.',
-            'fetch.empty': '🕳️ O motor não encontrou mídia nesse link.',
+            'fetch.empty': '🕳️ Nenhuma mídia encontrada nesse link.',
             'fetch.fail': '📡 Falha ao buscar a mídia.',
             'fetch.rate': '⏱️ Servidor ocupado, tente novamente em 1 min.'
         };
@@ -1027,6 +1028,13 @@
                 return; 
             }
 
+            // Alerta se colar link de perfil do TikTok em vez do vídeo
+            if (link.includes('tiktok.com/@') && !link.includes('/video/') && !link.includes('/photo/')) {
+                statusDiv.innerHTML = '⚠️ Você colou o link de um <strong>perfil</strong>.<br>Abra o vídeo no TikTok, clique em <strong>Compartilhar → Copiar link</strong> e cole aqui.';
+                statusDiv.style.color = '#ffd54f';
+                return;
+            }
+
             if (ehYouTube(link)) {
                 statusDiv.innerHTML = '⚠️ Suporte ao YouTube desativado. Cole links do Instagram, TikTok, X, Facebook, etc.';
                 statusDiv.style.color = '#ffd54f';
@@ -1046,27 +1054,29 @@
                 'https://cobalt.qwyku.com/api/json'
             ];
 
-            const requestPayload = JSON.stringify({
+            // Dados limpos compatíveis com a versão atual do Cobalt (sem causar invalid_body)
+            const payload = {
                 url: link,
                 downloadMode: format === 'audio' ? 'audio' : 'auto',
-                isAudioOnly: format === 'audio',
-                audioFormat: 'mp3',
-                aFormat: 'mp3',
-                audioBitrate: $('bitrateSelect').value,
                 videoQuality: $('qualitySelect').value,
                 filenameStyle: 'pretty'
-            });
+            };
+
+            if (format === 'audio') {
+                payload.audioFormat = 'mp3';
+                payload.audioBitrate = $('bitrateSelect').value;
+            }
+
+            const requestPayload = JSON.stringify(payload);
 
             for (let apiUrl of servidores) {
                 let host; try { host = new URL(apiUrl).host; } catch { host = apiUrl; }
                 statusDiv.innerHTML = '🔄 Conectando: ' + host + '...';
 
-                // Tolerância maior para o Render acordar no primeiro uso
                 const tempoLimite = apiUrl.includes('onrender.com') ? 35000 : 12000;
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), tempoLimite);
 
-                // Aviso automático caso o Render demore mais de 3 segundos para responder
                 let avisoAcordando = null;
                 if (apiUrl.includes('onrender.com')) {
                     avisoAcordando = setTimeout(() => {
