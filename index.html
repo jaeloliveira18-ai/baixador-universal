@@ -103,7 +103,7 @@
         }
 
         h1 {
-            font-size: 20px;
+            font-size: 19px;
             font-weight: 800;
             letter-spacing: -0.4px;
             color: #fff;
@@ -803,25 +803,42 @@
         }
 
         function detectarRede(url) {
-            const chip = $('chipRede'); const u = url.toLowerCase();
-            if (u.includes('facebook.com/stories') || u.includes('facebook.com/story')) {
-                chip.hidden = false; chip.className = 'chip-rede nao';
-                chip.textContent = '📘 Facebook Stories — não suportado ❌'; return;
+            const chip = $('chipRede');
+            const u = (url || '').trim().toLowerCase();
+            if (!u) {
+                chip.hidden = true;
+                return;
             }
-            const h = hostDe(url);
-            if (!h) { chip.hidden = true; return; }
 
-            // Seleção automática para SoundCloud
+            if (u.includes('facebook.com/stories') || u.includes('facebook.com/story')) {
+                chip.hidden = false;
+                chip.className = 'chip-rede nao';
+                chip.textContent = '📘 Facebook Stories — não suportado ❌';
+                return;
+            }
+
+            const h = hostDe(url);
+            if (!h) {
+                chip.hidden = true;
+                return;
+            }
+
             if (h.includes('soundcloud.com')) {
                 $('formatSelect').value = 'audio';
             }
 
             const achado = MAPA.find(([d]) => h === d || h.endsWith('.' + d));
-            if (!achado) { chip.hidden = true; return; }
-            chip.hidden = false; 
-            chip.className = 'chip-rede ' + achado;
-            chip.textContent = achado === 'ok' ? achado + ' — suportada ✅'
-                : achado + ' — não suportada ❌';
+            if (!achado) {
+                chip.hidden = true;
+                return;
+            }
+
+            const [dominio, nomeFormatado, status] = achado;
+            chip.hidden = false;
+            chip.className = 'chip-rede ' + (status === 'ok' ? 'ok' : 'nao');
+            chip.textContent = status === 'ok' 
+                ? nomeFormatado + ' — suportada ✅' 
+                : nomeFormatado + ' — não suportada ❌';
         }
 
         function ehYouTube(url) {
@@ -1028,7 +1045,6 @@
                 return; 
             }
 
-            // Alerta se colar link de perfil do TikTok em vez do vídeo
             if (link.includes('tiktok.com/@') && !link.includes('/video/') && !link.includes('/photo/')) {
                 statusDiv.innerHTML = '⚠️ Você colou o link de um <strong>perfil</strong>.<br>Abra o vídeo no TikTok, clique em <strong>Compartilhar → Copiar link</strong> e cole aqui.';
                 statusDiv.style.color = '#ffd54f';
@@ -1054,7 +1070,6 @@
                 'https://cobalt.qwyku.com/api/json'
             ];
 
-            // Dados limpos compatíveis com a versão atual do Cobalt (sem causar invalid_body)
             const payload = {
                 url: link,
                 downloadMode: format === 'audio' ? 'audio' : 'auto',
